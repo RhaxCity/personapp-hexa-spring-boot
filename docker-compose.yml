@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: my_user
+      MYSQL_PASSWORD: my_password
+    ports:
+      - "3307:3306"  # Mapeamos el puerto 3306 de MariaDB al puerto 3307 en el host
+    volumes:
+      - ./mariadb-init:/docker-entrypoint-initdb.d  # Scripts de inicialización
+    networks:
+      - my_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: my_database
+    ports:
+      - "27017:27017"  # Mapeamos el puerto 27017 de MongoDB al mismo puerto en el host
+    volumes:
+      - ./mongo-init:/docker-entrypoint-initdb.d  # Scripts de inicialización
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
