@@ -1,6 +1,6 @@
 package co.edu.javeriana.as.personapp.adapter;
 
-mport co.edu.javeriana.as.personapp.application.port.in.PersonInputPort;
+import co.edu.javeriana.as.personapp.application.port.in.PersonInputPort;
 import co.edu.javeriana.as.personapp.application.port.in.ProfessionInputPort;
 import co.edu.javeriana.as.personapp.application.port.in.StudyInputPort;
 import co.edu.javeriana.as.personapp.application.port.out.PersonOutputPort;
