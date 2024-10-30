@@ -3,14 +3,11 @@ services:
     image: mariadb:latest
     container_name: mariadb-container
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: my_database
-      MYSQL_USER: my_user
-      MYSQL_PASSWORD: my_password
+      MYSQL_ROOT_PASSWORD: rootpassword  # Mantén solo la contraseña de root
     ports:
-      - "3307:3306"  # Mapeamos el puerto 3306 de MariaDB al puerto 3307 en el host
+      - "3307:3306"
     volumes:
-      - ./mariadb-init:/docker-entrypoint-initdb.d  # Scripts de inicialización
+      - ./scripts:/docker-entrypoint-initdb.d  # Cargar scripts de inicialización
     networks:
       - my_network
 
@@ -18,16 +15,35 @@ services:
     image: mongo:latest
     container_name: mongodb-container
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
-      MONGO_INITDB_DATABASE: my_database
+      MONGO_INITDB_ROOT_USERNAME: persona_db
+      MONGO_INITDB_ROOT_PASSWORD: persona_db
+      MONGO_INITDB_DATABASE: persona_db
     ports:
       - "27017:27017"
     volumes:
-      - ./mongo-init:/docker-entrypoint-initdb.d  # Ejecuta el script de inicialización
+      - ./scripts:/docker-entrypoint-initdb.d  # Cargar scripts de inicialización
     networks:
       - my_network
+
+  #rest-api:
+   # build:
+   #   context: .
+   #   dockerfile: Dockerfile
+   # container_name: rest-api-container
+  #  environment:
+  #    SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/persona_db  # Cambia a 'persona_db'
+   #   SPRING_DATASOURCE_USERNAME: persona_db  # Cambiado de 'my_user' a 'persona_db'
+    #  SPRING_DATASOURCE_PASSWORD: persona_db  # Cambiado de 'my_password' a 'persona_db'
+     # SPRING_DATA_MONGODB_URI: mongodb://persona_db:persona_db@mongodb:27017/persona_db  # Cambia las credenciales de MongoDB
+  #  ports:
+  #    - "3000:3000"  # Mapea el puerto 3000 de la API al host
+   # depends_on:
+  #    - mariadb
+   #   - mongodb
+   # networks:
+   #   - my_network
 
 networks:
   my_network:
     driver: bridge
+
