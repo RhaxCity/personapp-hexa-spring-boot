@@ -22,9 +22,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
       MONGO_INITDB_DATABASE: my_database
     ports:
-      - "27017:27017"  # Mapeamos el puerto 27017 de MongoDB al mismo puerto en el host
+      - "27017:27017"
     volumes:
-      - ./mongo-init:/docker-entrypoint-initdb.d  # Scripts de inicialización
+      - ./mongo-init:/docker-entrypoint-initdb.d  # Ejecuta el script de inicialización
     networks:
       - my_network
 
