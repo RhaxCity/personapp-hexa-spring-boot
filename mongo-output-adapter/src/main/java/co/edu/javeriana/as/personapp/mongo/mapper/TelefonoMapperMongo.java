@@ -8,7 +8,9 @@ import co.edu.javeriana.as.personapp.domain.Phone;
 import co.edu.javeriana.as.personapp.mongo.document.PersonaDocument;
 import co.edu.javeriana.as.personapp.mongo.document.TelefonoDocument;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Mapper
 public class TelefonoMapperMongo {
 
@@ -29,6 +31,7 @@ public class TelefonoMapperMongo {
 
 	public Phone fromAdapterToDomain(TelefonoDocument telefonoDocument) {
 		Phone phone = new Phone();
+		log.warn("Mapping from domain to adapter"+ phone);
 		phone.setNumber(telefonoDocument.getId());
 		phone.setCompany(telefonoDocument.getOper());
 		phone.setOwner(validateOwner(telefonoDocument.getPrimaryDuenio()));
@@ -36,6 +39,8 @@ public class TelefonoMapperMongo {
 	}
 
 	private @NonNull Person validateOwner(PersonaDocument duenio) {
-		return duenio != null ? personaMapperMongo.fromAdapterToDomain(duenio) : new Person();
+		Person owner = new Person();
+		owner.setIdentification(duenio.getId());
+		return owner;
 	}
 }

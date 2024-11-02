@@ -8,7 +8,9 @@ import co.edu.javeriana.as.personapp.domain.Phone;
 import co.edu.javeriana.as.personapp.mariadb.entity.PersonaEntity;
 import co.edu.javeriana.as.personapp.mariadb.entity.TelefonoEntity;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Mapper
 public class TelefonoMapperMaria {
 
@@ -16,6 +18,8 @@ public class TelefonoMapperMaria {
 	private PersonaMapperMaria personaMapperMaria;
 
 	public TelefonoEntity fromDomainToAdapter(Phone phone) {
+		log.warn("Mapping from domain to adapter"+ phone);
+
 		TelefonoEntity telefonoEntity = new TelefonoEntity();
 		telefonoEntity.setNum(phone.getNumber());
 		telefonoEntity.setOper(phone.getCompany());
@@ -36,6 +40,8 @@ public class TelefonoMapperMaria {
 	}
 
 	private @NonNull Person validateOwner(PersonaEntity duenio) {
-		return duenio != null ? personaMapperMaria.fromAdapterToDomain(duenio) : new Person();
+		Person owner = new Person();
+		owner.setIdentification(duenio.getCc());
+		return owner;
 	}
 }

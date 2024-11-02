@@ -1,5 +1,5 @@
 // Connect to the MongoDB database
-//const db = connect("mongodb://localhost:27017/prueba_db");
+// const db = connect("mongodb://localhost:27017/prueba_db");
 
 db.persona.insertMany([
 	{
@@ -41,7 +41,7 @@ db.persona.insertMany([
 		"edad": NumberInt(18),
 		"_class": "co.edu.javeriana.as.personapp.mongo.document.PersonaDocument"
 	}
-], { ordered: false })
+], { ordered: false });
 
 db.profesion.insertMany([
     {
@@ -60,27 +60,26 @@ db.telefono.insertMany([
     {
         "num": "3001234567",
         "oper": "Movistar",
-        "duenio": NumberInt(123456789)
+        "primaryDuenio": NumberInt(123456789) // Usar el ID real como NumberInt
     },
     {
         "num": "3101234567",
         "oper": "Claro",
-        "duenio": NumberInt(987654321)
+        "primaryDuenio": NumberInt(987654321) // Usar el ID real como NumberInt
     }
 ]);
 
 db.estudios.insertMany([
     {
-        "id_prof": 1,
-        "cc_per": NumberInt(123456789),
-        "fecha": ISODate("2020-01-01T00:00:00Z"), // Usar ISODate para las fechas
+        "primaryProfesion": NumberInt(1), // Cambiar a NumberInt si el _id de profesión es un entero
+        "primaryPersona": NumberInt(123456789), // Cambiar a NumberInt si el _id de persona es un entero
+        "fecha": ISODate("2020-01-01T00:00:00Z"),
         "univer": "Universidad Javeriana"
     },
     {
-        "id_prof": 2,
-        "cc_per": NumberInt(321654987),
+        "primaryProfesion": NumberInt(2), // Cambiar a NumberInt si el _id de profesión es un entero
+        "primaryPersona": NumberInt(321654987), // Cambiar a NumberInt si el _id de persona es un entero
         "fecha": ISODate("2019-01-01T00:00:00Z"),
         "univer": "Universidad Nacional"
     }
 ]);
-
