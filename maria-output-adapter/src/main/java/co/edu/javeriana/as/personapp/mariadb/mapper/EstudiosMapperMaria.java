@@ -2,6 +2,7 @@ package co.edu.javeriana.as.personapp.mariadb.mapper;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,19 +70,24 @@ public class EstudiosMapperMaria {
 		log.warn("Mapping validateGraduationDate: {}", graduationDate);
 
         if (graduationDate == null) {
-            log.warn("La fecha de graduación es nula.");
-            return null; // Devuelve null si la fecha es nula
+            return null; // o manejar el caso de error según tu lógica
         }
 
-        try {
-            // Convertir Date a LocalDate
-            return graduationDate.toInstant()
-                                 .atZone(ZoneId.systemDefault()) // Ajusta según sea necesario
-                                 .toLocalDate();
-        } catch (Exception e) {
-            log.error("Error al convertir la fecha de graduación: {}", e.getMessage(), e);
-            return null; // Devuelve null en caso de error
-        }
+        // Usar Calendar para obtener los componentes de la fecha
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(graduationDate);
+
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1; // Los meses empiezan en 0
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        // Crear el LocalDate usando los componentes
+        LocalDate localGraduationDate = LocalDate.of(year, month, day);
+
+        // Imprimir la fecha convertida (opcional)
+        log.info("Converted graduation date to LocalDate: {}", localGraduationDate);
+        
+        return localGraduationDate;
 	}
 
 	private String validateUniversityName(String univer) {
