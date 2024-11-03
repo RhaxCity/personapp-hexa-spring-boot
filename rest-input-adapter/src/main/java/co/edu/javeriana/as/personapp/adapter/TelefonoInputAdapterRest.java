@@ -103,7 +103,7 @@ public class TelefonoInputAdapterRest {
     public TelefonoResponse deletePhone(String database, String number) {
         try{
             setPhoneOutputPortInjection(database);
-            return new TelefonoResponse(number,"DELETED","DELETED",database,"DELETED");
+            return new TelefonoResponse(String.valueOf(phoneInputPort.drop(number)),"DELETED","DELETED",database,"DELETED");
         } catch (Exception e) {
             log.warn("Invalid database option: " + database+" "+e.getMessage());
             return null;
