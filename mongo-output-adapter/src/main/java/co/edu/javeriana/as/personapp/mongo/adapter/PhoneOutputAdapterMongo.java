@@ -24,9 +24,10 @@ public class PhoneOutputAdapterMongo implements PhoneOutputPort {
 
     @Override
     public Phone save(Phone phone) {
-        log.debug("Into save on Adapter MongoDB");
+        log.warn("Into save on Adapter MongoDB");
         try {
             TelefonoDocument persistedPhone = telefonoRepositoryMongo.save(telefonoMapperMongo.fromDomainToAdapter(phone));
+            log.warn("Phone saved: " + persistedPhone);
             return telefonoMapperMongo.fromAdapterToDomain(persistedPhone);
         } catch (MongoWriteException e) {
             log.warn(e.getMessage());

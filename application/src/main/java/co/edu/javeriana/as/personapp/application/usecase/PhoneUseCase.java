@@ -34,7 +34,9 @@ public class PhoneUseCase implements PhoneInputPort {
 
     @Override
     public Phone edit(String number, Phone phone) throws NoExistException {
+        
         Phone oldPerson = phonePersistence.findById(number);
+        log.warn("Old phone: " + phone);
         if (oldPerson != null)
             return phonePersistence.save(phone);
         throw new NoExistException(

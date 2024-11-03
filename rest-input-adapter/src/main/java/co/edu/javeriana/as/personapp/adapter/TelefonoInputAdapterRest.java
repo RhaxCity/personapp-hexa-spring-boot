@@ -78,11 +78,17 @@ public class TelefonoInputAdapterRest {
     }
 
     public TelefonoResponse createPhone(TelefonoRequest request) {
-        try {
-            setPhoneOutputPortInjection(request.getDatabase());
-            Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
-            Phone phone = phoneInputPort.create(telefonoMapperRest.fromAdapterToDomain(request, owner));
-            return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+        try {            
+            if(setPhoneOutputPortInjection(request.getDatabase()).equalsIgnoreCase(DatabaseOption.MARIA.toString())){
+                Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
+                Phone phone = phoneInputPort.create(telefonoMapperRest.fromAdapterToDomain(request, owner));
+                return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+            }else{
+                Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
+                Phone phone = phoneInputPort.create(telefonoMapperRest.fromAdapterToDomain(request, owner));
+                return telefonoMapperRest.fromDomainToAdapterRestMongo(phone);
+            }
+            
         } catch (Exception e) {
             log.warn("Invalid database option: " + request.getDatabase()+" "+e.getMessage());
             return null;
@@ -91,9 +97,13 @@ public class TelefonoInputAdapterRest {
 
     public TelefonoResponse findOne(String database, String number) {
         try{
-            setPhoneOutputPortInjection(database);
-            Phone phone = phoneInputPort.findOne(number);
-            return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+            if(setPhoneOutputPortInjection(database).equalsIgnoreCase(DatabaseOption.MARIA.toString())){
+                Phone phone = phoneInputPort.findOne(number);
+                return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+            }else{
+                Phone phone = phoneInputPort.findOne(number);
+                return telefonoMapperRest.fromDomainToAdapterRestMongo(phone);
+            }
         } catch (Exception e) {
             log.warn("Invalid database option: " + database+" "+e.getMessage());
             return null;
@@ -102,8 +112,11 @@ public class TelefonoInputAdapterRest {
 
     public TelefonoResponse deletePhone(String database, String number) {
         try{
-            setPhoneOutputPortInjection(database);
-            return new TelefonoResponse(String.valueOf(phoneInputPort.drop(number)),"DELETED","DELETED",database,"DELETED");
+            if(setPhoneOutputPortInjection(database).equalsIgnoreCase(DatabaseOption.MARIA.toString())){
+                return new TelefonoResponse(String.valueOf(phoneInputPort.drop(number)),"DELETED","DELETED",database,"DELETED");
+            }else{
+                return new TelefonoResponse(String.valueOf(phoneInputPort.drop(number)),"DELETED","DELETED",database,"DELETED");
+            }
         } catch (Exception e) {
             log.warn("Invalid database option: " + database+" "+e.getMessage());
             return null;
@@ -112,12 +125,20 @@ public class TelefonoInputAdapterRest {
 
     public TelefonoResponse editPhone(TelefonoRequest request) {
         try{
-            setPhoneOutputPortInjection(request.getDatabase());
-            Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
-            log.info("Owner unicornio: "+owner.toString());
-            Phone phone = phoneInputPort.edit(request.getNumber(),telefonoMapperRest.fromAdapterToDomain(request, owner));
-            log.info("Phone unicornio: "+phone.toString());
-            return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+
+            if(setPhoneOutputPortInjection(request.getDatabase()).equalsIgnoreCase(DatabaseOption.MARIA.toString())){
+                Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
+                log.info("Owner unicornio: "+owner.toString());
+                Phone phone = phoneInputPort.edit(request.getNumber(),telefonoMapperRest.fromAdapterToDomain(request, owner));
+                log.info("Phone unicornio: "+phone.toString());
+                return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
+            }else{
+                Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
+                log.info("Owner unicornio: "+owner.toString());
+                Phone phone = phoneInputPort.edit(request.getNumber(),telefonoMapperRest.fromAdapterToDomain(request, owner));
+                log.info("Phone unicornio: "+phone.toString());
+                return telefonoMapperRest.fromDomainToAdapterRestMongo(phone);
+            }
         } catch (Exception e) {
             log.warn("Invalid database option: " + request.getDatabase()+" "+e.getMessage());
             return null;
