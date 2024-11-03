@@ -12,6 +12,7 @@ import co.edu.javeriana.as.personapp.common.annotations.Adapter;
 import co.edu.javeriana.as.personapp.domain.Person;
 import co.edu.javeriana.as.personapp.mongo.document.PersonaDocument;
 import co.edu.javeriana.as.personapp.mongo.mapper.PersonaMapperMongo;
+import co.edu.javeriana.as.personapp.mongo.repository.EstudiosRepositoryMongo;
 import co.edu.javeriana.as.personapp.mongo.repository.PersonaRepositoryMongo;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +22,9 @@ public class PersonOutputAdapterMongo implements PersonOutputPort {
 	
 	@Autowired
     private PersonaRepositoryMongo personaRepositoryMongo;
+	
+	@Autowired
+    private EstudiosRepositoryMongo studyRepositoryMongo;
 	
 	@Autowired
 	private PersonaMapperMongo personaMapperMongo;
@@ -38,11 +42,30 @@ public class PersonOutputAdapterMongo implements PersonOutputPort {
 	}
 
 	@Override
-	public Boolean delete(Integer identification) {
-		log.debug("Into delete on Adapter MongoDB");
-		personaRepositoryMongo.deleteById(identification);
-		return personaRepositoryMongo.findById(identification).isEmpty();
-	}
+public Boolean delete(Integer personId) {
+    log.debug("Into delete on Adapter MongoDB");
+
+    // Verifica si la persona existe
+    if (personaRepositoryMongo.existsById(personId)) {
+        // Encuentra la persona usando su ID
+        PersonaDocument persona = personaRepositoryMongo.findById(personId).orElse(null);
+
+        // Elimina todos los estudios asociados a la persona
+        if (persona != null) {
+            studyRepositoryMongo.deleteByPrimaryPersona(persona);
+        }
+
+        // Elimina la persona
+        personaRepositoryMongo.deleteById(personId);
+
+        // Verifica si la persona fue eliminada correctamente
+        return !personaRepositoryMongo.existsById(personId);
+    } else {
+        log.warn("No person found with ID: " + personId);
+        return false; // Retorna falso si no se encontró la persona
+    }
+}
+
 
 	@Override
 	public List<Person> find() {
