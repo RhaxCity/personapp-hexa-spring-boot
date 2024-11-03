@@ -11,15 +11,17 @@ import java.util.Scanner;
 @Slf4j
 public class TelefonoMenu {
 
+    private static String DATABASE = "MARIA";
     private static final int OPCION_REGRESAR_MODULOS = 0;
     private static final int PERSISTENCIA_MARIADB = 1;
     private static final int PERSISTENCIA_MONGODB = 2;
+
     private static final int OPCION_REGRESAR_MOTOR_PERSISTENCIA = 0;
     private static final int OPCION_VER_TODO = 1;
-    private static final int OPCION_VER_TELEFONO = 2;
-    private static final int OPCION_CREAR_TELEFONO = 3;
-    private static final int OPCION_ELIMINAR_TELEFONO = 4;
-    private static final int OPCION_EDITAR_TELEFONO= 5;
+    private static final int OPCION_CREAR = 2;
+    private static final int OPCION_ACTUALIZAR = 3;
+    private static final int OPCION_BUSCAR = 4;
+    private static final int OPCION_ELIMINAR = 5;
 
     public void iniciarMenu(TelefonoInputAdapterCli telefonoInputAdapterCli, Scanner keyboard) {
         boolean isValid = false;
@@ -32,11 +34,13 @@ public class TelefonoMenu {
                         isValid = true;
                         break;
                     case PERSISTENCIA_MARIADB:
-                        telefonoInputAdapterCli.setPhoneOutputPortInjection("MARIA");
+                        TelefonoMenu.DATABASE = "MARIA";
+                        telefonoInputAdapterCli.setPhoneOutputPortInjection(TelefonoMenu.DATABASE);
                         menuOpciones(telefonoInputAdapterCli, keyboard);
                         break;
                     case PERSISTENCIA_MONGODB:
-                        telefonoInputAdapterCli.setPhoneOutputPortInjection("MONGO");
+                        TelefonoMenu.DATABASE = "MONGO";
+                        telefonoInputAdapterCli.setPhoneOutputPortInjection(TelefonoMenu.DATABASE);
                         menuOpciones(telefonoInputAdapterCli, keyboard);
                         break;
                     default:
@@ -61,17 +65,17 @@ public class TelefonoMenu {
                     case OPCION_VER_TODO:
                         telefonoInputAdapterCli.historial();
                         break;
-                    case OPCION_VER_TELEFONO:
-                        telefonoInputAdapterCli.findOne(findPhone(keyboard));
+                    case OPCION_CREAR:
+                        telefonoInputAdapterCli.crearTelefono(leerEntidad(keyboard), TelefonoMenu.DATABASE);
                         break;
-                    case OPCION_CREAR_TELEFONO:
-                        telefonoInputAdapterCli.createPhone(createEntity(keyboard));
+                    case OPCION_ACTUALIZAR:
+                        telefonoInputAdapterCli.editarTelefono(leerEntidad(keyboard), TelefonoMenu.DATABASE);
                         break;
-                    case OPCION_ELIMINAR_TELEFONO:
-                        telefonoInputAdapterCli.deletePhone(findPhone(keyboard));
+                    case OPCION_BUSCAR:
+                        telefonoInputAdapterCli.buscarTelefono(TelefonoMenu.DATABASE, leerNumero(keyboard));
                         break;
-                    case OPCION_EDITAR_TELEFONO:
-                        telefonoInputAdapterCli.editPhone(editPhone(keyboard));
+                    case OPCION_ELIMINAR:
+                        telefonoInputAdapterCli.eliminarTelefono(TelefonoMenu.DATABASE, leerNumero(keyboard));
                         break;
                     default:
                         log.warn("La opción elegida no es válida.");
@@ -84,11 +88,11 @@ public class TelefonoMenu {
 
     private void mostrarMenuOpciones() {
         System.out.println("----------------------");
-        System.out.println(OPCION_VER_TODO + " para ver todas los telefonos");
-        System.out.println(OPCION_VER_TELEFONO + " para ver un telefono");
-        System.out.println(OPCION_CREAR_TELEFONO + " para crear un telefono");
-        System.out.println(OPCION_ELIMINAR_TELEFONO + " para eliminar un telefono");
-        System.out.println(OPCION_EDITAR_TELEFONO + " para editar un telefono");
+        System.out.println(OPCION_VER_TODO + " para ver todos los teléfonos");
+        System.out.println(OPCION_CREAR + " para crear un teléfono");
+        System.out.println(OPCION_ACTUALIZAR + " para actualizar un teléfono");
+        System.out.println(OPCION_BUSCAR + " para buscar un teléfono");
+        System.out.println(OPCION_ELIMINAR + " para eliminar un teléfono");
         System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " para regresar");
     }
 
@@ -106,51 +110,37 @@ public class TelefonoMenu {
         } catch (InputMismatchException e) {
             log.warn("Solo se permiten números.");
             return leerOpcion(keyboard);
-
         }
     }
 
-    private String findPhone(Scanner keyboard){
-        try{
-            System.out.println("Ingrese el numero de telefono: ");
-            return keyboard.next();
-        }catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return findPhone(keyboard);
-        }
-    }
-    private TelefonoModelCli createEntity(Scanner keyboard){
-        try{
-            TelefonoModelCli phone = new TelefonoModelCli();
-            System.out.println("Ingrese número de telefono: ");
-            phone.setNum(keyboard.next());
-            return phoneData(keyboard, phone);
-        } catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return createEntity(keyboard);
-        }
-
-    }
-
-    private TelefonoModelCli editPhone(Scanner keyboard){
+    private String leerNumero(Scanner keyboard) {
         try {
-            String number = findPhone(keyboard);
-            TelefonoModelCli phone = new TelefonoModelCli();
-            phone.setNum(number);
-            return phoneData(keyboard, phone);
-        }catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return editPhone(keyboard);
+            keyboard.nextLine();
+            System.out.print("Ingrese el numero: ");
+            String numero = keyboard.nextLine();
+            return numero;
+        } catch (Exception e) {
+            log.warn("Solo se permiten números.");
+            return leerNumero(keyboard);
         }
     }
 
-    private TelefonoModelCli phoneData(Scanner keyboard, TelefonoModelCli phone) {
-        System.out.println("Ingrese operador: ");
-        phone.setOper(keyboard.next());
-        System.out.println("Ingrese identificación del dueño: ");
-        phone.setDuenio(keyboard.nextInt());
-        return phone;
+    public TelefonoModelCli leerEntidad(Scanner keyboard) {
+        try {
+            TelefonoModelCli telefonoModelCli = new TelefonoModelCli();
+            keyboard.nextLine();
+            System.out.print("Ingrese el numero: ");
+            telefonoModelCli.setNumber(keyboard.nextLine());
+            System.out.print("Ingrese la compañia: ");
+            telefonoModelCli.setCompany(keyboard.nextLine());
+            System.out.print("Ingrese el id de la persona: ");
+            telefonoModelCli.setIdPerson(keyboard.nextLine());
+            return telefonoModelCli;
+        } catch (Exception e) {
+            System.out.println("Datos incorrectos, ingrese los datos nuevamente.");
+            return leerEntidad(keyboard);
+        }
     }
+
 
 }
-

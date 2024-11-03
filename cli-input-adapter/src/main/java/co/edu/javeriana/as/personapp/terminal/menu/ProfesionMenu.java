@@ -10,15 +10,18 @@ import java.util.Scanner;
 
 @Slf4j
 public class ProfesionMenu {
+
+    private static String DATABASE = "MARIA";
     private static final int OPCION_REGRESAR_MODULOS = 0;
     private static final int PERSISTENCIA_MARIADB = 1;
     private static final int PERSISTENCIA_MONGODB = 2;
+
     private static final int OPCION_REGRESAR_MOTOR_PERSISTENCIA = 0;
     private static final int OPCION_VER_TODO = 1;
-    private static final int OPCION_VER_PROFESION =2;
-    private static final int OPCION_CREAR_PROFESION =3;
-    private static final int OPCION_ELIMINAR_PROFESION = 4;
-    private static final int OPCION_EDITAR_PROFESION= 5;
+    private static final int OPCION_CREAR = 2;
+    private static final int OPCION_ACTUALIZAR = 3;
+    private static final int OPCION_BUSCAR = 4;
+    private static final int OPCION_ELIMINAR = 5;
 
     public void iniciarMenu(ProfesionInputAdapterCli profesionInputAdapterCli, Scanner keyboard) {
         boolean isValid = false;
@@ -31,23 +34,26 @@ public class ProfesionMenu {
                         isValid = true;
                         break;
                     case PERSISTENCIA_MARIADB:
-                        profesionInputAdapterCli.setProfessionOutputPortInjection("MARIA");
-                        menuOpciones(profesionInputAdapterCli,keyboard);
+                        ProfesionMenu.DATABASE = "MARIA";
+                        profesionInputAdapterCli.setProfessionOutputPortInjection(ProfesionMenu.DATABASE);
+                        menuOpciones(profesionInputAdapterCli, keyboard);
                         break;
                     case PERSISTENCIA_MONGODB:
-                        profesionInputAdapterCli.setProfessionOutputPortInjection("MONGO");
-                        menuOpciones(profesionInputAdapterCli,keyboard);
+                        ProfesionMenu.DATABASE = "MONGO";
+                        profesionInputAdapterCli.setProfessionOutputPortInjection(ProfesionMenu.DATABASE);
+                        menuOpciones(profesionInputAdapterCli, keyboard);
                         break;
                     default:
                         log.warn("La opción elegida no es válida.");
                 }
-            }  catch (InvalidOptionException e) {
+            } catch (InvalidOptionException e) {
                 log.warn(e.getMessage());
             }
         } while (!isValid);
     }
 
-    private void menuOpciones(ProfesionInputAdapterCli profesionInputAdapterCli, Scanner keyboard) {
+    private void menuOpciones(ProfesionInputAdapterCli profesionInputAdapterCli
+            , Scanner keyboard) {
         boolean isValid = false;
         do {
             try {
@@ -60,17 +66,17 @@ public class ProfesionMenu {
                     case OPCION_VER_TODO:
                         profesionInputAdapterCli.historial();
                         break;
-                    case OPCION_VER_PROFESION:
-                        profesionInputAdapterCli.findOne(findProfession(keyboard));
+                    case OPCION_CREAR:
+                        profesionInputAdapterCli.crearProfesion(leerEntidad(keyboard), ProfesionMenu.DATABASE);
                         break;
-                    case OPCION_CREAR_PROFESION:
-                        profesionInputAdapterCli.createProfession(createEntity(keyboard));
+                    case OPCION_ACTUALIZAR:
+                        profesionInputAdapterCli.editarProfesion(leerEntidad(keyboard), ProfesionMenu.DATABASE);
                         break;
-                    case OPCION_ELIMINAR_PROFESION:
-                        profesionInputAdapterCli.deleteProfession(findProfession(keyboard));
+                    case OPCION_BUSCAR:
+                        profesionInputAdapterCli.buscarProfesion(ProfesionMenu.DATABASE, leerIdentificacion(keyboard));
                         break;
-                    case OPCION_EDITAR_PROFESION:
-                        profesionInputAdapterCli.editPerson(editProfession(keyboard));
+                    case OPCION_ELIMINAR:
+                        profesionInputAdapterCli.eliminarProfesion(ProfesionMenu.DATABASE, leerIdentificacion(keyboard));
                         break;
                     default:
                         log.warn("La opción elegida no es válida.");
@@ -83,11 +89,11 @@ public class ProfesionMenu {
 
     private void mostrarMenuOpciones() {
         System.out.println("----------------------");
-        System.out.println(OPCION_VER_TODO + " para ver todas las personas");
-        System.out.println(OPCION_VER_PROFESION + " para ver una profesion");
-        System.out.println(OPCION_CREAR_PROFESION + " para crear una profesion");
-        System.out.println(OPCION_ELIMINAR_PROFESION + " para eliminar una profesion");
-        System.out.println(OPCION_EDITAR_PROFESION + " para editar una profesion");
+        System.out.println(OPCION_VER_TODO + " para ver todas las profesiones");
+        System.out.println(OPCION_CREAR + " para crear una profesion");
+        System.out.println(OPCION_ACTUALIZAR + " para actualizar una profesion");
+        System.out.println(OPCION_BUSCAR + " para buscar una profesion");
+        System.out.println(OPCION_ELIMINAR + " para eliminar una profesion");
         System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " para regresar");
     }
 
@@ -108,47 +114,32 @@ public class ProfesionMenu {
         }
     }
 
-    private int findProfession(Scanner keyboard){
-        try{
-            System.out.println("Ingrese id de la profesión: ");
-            return keyboard.nextInt();
-        }catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return findProfession(keyboard);
-        }
-    }
-
-    private ProfesionModelCli createEntity(Scanner keyboard){
-        try{
-            ProfesionModelCli profession = new ProfesionModelCli();
-            System.out.println("Ingrese id: ");
-            profession.setId(keyboard.nextInt());
-            return professionData(keyboard, profession);
-        } catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return createEntity(keyboard);
-        }
-    }
-
-    private ProfesionModelCli editProfession(Scanner keyboard){
+    private int leerIdentificacion(Scanner keyboard) {
         try {
-            int id = findProfession(keyboard);
-            ProfesionModelCli profession = new ProfesionModelCli();
-            profession.setId(id);
-            return professionData(keyboard, profession);
-        }catch (InputMismatchException e) {
-            System.out.println("Datos incorrectos.");
-            return editProfession(keyboard);
+            System.out.print("Ingrese la identificacion: ");
+            return keyboard.nextInt();
+        } catch (InputMismatchException e) {
+            log.warn("Solo se permiten números.");
+            return leerOpcion(keyboard);
         }
     }
 
-    private ProfesionModelCli professionData(Scanner keyboard, ProfesionModelCli profession) {
-        System.out.println("Ingrese nombre: ");
-        profession.setNom(keyboard.next());
-        System.out.println("Ingrese descripcion: ");
-        profession.setDes(keyboard.next());
-        return profession;
+    public ProfesionModelCli leerEntidad(Scanner keyboard) {
+        try {
+            ProfesionModelCli profesion = new ProfesionModelCli();
+            System.out.println("Ingrese la identificacion: ");
+            profesion.setId(keyboard.nextInt());
+            keyboard.nextLine();
+            System.out.println("Ingrese el nombre: ");
+            profesion.setName(keyboard.nextLine());
+            System.out.println("Ingrese la descripcion: ");
+            profesion.setDescription(keyboard.nextLine());
+            return profesion;
+        } catch (InputMismatchException e) {
+            System.out.println("Datos incorrectos, ingrese los datos nuevamente.");
+            return leerEntidad(keyboard);
+        }
     }
+
 
 }
-

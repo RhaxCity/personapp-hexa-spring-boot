@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Slf4j
 @Adapter
 public class ProfesionInputAdapterCli {
+
     @Autowired
     @Qualifier("professionOutputAdapterMaria")
     private ProfessionOutputPort professionOutputPortMaria;
@@ -31,65 +32,78 @@ public class ProfesionInputAdapterCli {
 
     public void setProfessionOutputPortInjection(String dbOption) throws InvalidOptionException {
         if (dbOption.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
+
             professionInputPort = new ProfessionUseCase(professionOutputPortMaria);
+
         } else if (dbOption.equalsIgnoreCase(DatabaseOption.MONGO.toString())) {
+
             professionInputPort = new ProfessionUseCase(professionOutputPortMongo);
+
         } else {
             throw new InvalidOptionException("Invalid database option: " + dbOption);
         }
     }
 
-    public void historial() {
-        log.info("Into historial PersonaEntity in Input Adapter");
+    public void historial(){
+        log.info("Into historial ProfessionEntity in Input Adapter");
         professionInputPort.findAll().stream()
-                .map(profesionMapperCli::fromDomainToAdapterCli)
-                .forEach(System.out::println);
+            .map(profesionMapperCli::fromDomainToAdapterCli)
+            .forEach(System.out::println);
     }
-    public void findOne(int id) {
-        log.info("Into findOne ProfessionEntity in Input Adapter");
-        try {
-            Profession profession = professionInputPort.findOne(id);
-            ProfesionModelCli profesionModelCli = profesionMapperCli.fromDomainToAdapterCli(profession);
-            System.out.println("Profession found:\n" + profesionModelCli.toString());
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-            System.out.println("Error.");
-        }
-    }
-    public void createProfession(ProfesionModelCli profesionModelCli){
-        log.info("Into crearProfession StudyEntity in Input Adapter");
+
+    public void crearProfesion(ProfesionModelCli profesionModelCli, String dbOption){
+        log.info("Into crearProfesion ProfessionEntity in Input Adapter");
         try{
+            setProfessionOutputPortInjection(dbOption);
             professionInputPort.create(profesionMapperCli.fromAdapterCliToDomain(profesionModelCli));
-            System.out.println("Profession created.");
-        }catch (Exception e){
+            System.out.println("Profesion creada con exito: "+profesionModelCli.toString());
+        }
+        catch (Exception e){
             log.warn(e.getMessage());
-            System.out.println("Error.");
+            System.out.println("Error al crear profesion");
         }
     }
 
-    public void deleteProfession(int id) {
-        log.info("Into deleteProfession PersonaEntity in Input Adapter");
-        try {
-            if (professionInputPort.drop(id)){
-                System.out.println("Profession deleted.");
-            }else{
-                System.out.println("Error at delete.");
-            }
-        } catch (Exception e) {
+    public void editarProfesion(ProfesionModelCli profesionModelCli, String dbOption){
+        log.info("Into editarProfesion ProfessionEntity in Input Adapter");
+        try{
+            setProfessionOutputPortInjection(dbOption);
+            Profession profession= professionInputPort.edit(profesionModelCli.getId(),profesionMapperCli.fromAdapterCliToDomain(profesionModelCli));
+            System.out.println("Profesion editada con exito: "+profession.toString());
+        }
+        catch (Exception e){
             log.warn(e.getMessage());
-            System.out.println("Error.");
+            System.out.println("Error al editar : "+profesionModelCli.toString());
         }
     }
 
-    public void editPerson(ProfesionModelCli profesionModelCli) {
-        log.info("Into editProffesion PersonaEntity in Input Adapter");
-        try {
-            professionInputPort.edit(profesionModelCli.getId(),profesionMapperCli.fromAdapterCliToDomain(profesionModelCli));
-            System.out.println("Profession edited.");
-        } catch (Exception e) {
+    public void eliminarProfesion(String dbOption, int cc)
+    {
+        log.info("Into eliminarProfesion ProfessionEntity in Input Adapter");
+        try{
+            setProfessionOutputPortInjection(dbOption);
+            boolean resultado = professionInputPort.drop(cc);
+            if (resultado)
+                System.out.println("Profesion eliminada con exito: "+cc);
+        }
+        catch (Exception e){
             log.warn(e.getMessage());
-            System.out.println("Error.");
+            System.out.println("Error al eliminar profesion");
         }
     }
 
+    public void buscarProfesion(String dbOption, int cc)
+    {
+        log.info("Into buscarProfesion ProfessionEntity in Input Adapter");
+        try{
+            setProfessionOutputPortInjection(dbOption);
+            Profession profession = professionInputPort.findOne(cc);
+            ProfesionModelCli profesionModelCli = profesionMapperCli.fromDomainToAdapterCli(profession);
+            System.out.println("Profesion encontrada: "+profesionModelCli.toString());
+        }
+        catch (Exception e){
+            log.warn(e.getMessage());
+            System.out.println("Error al buscar profesion");
+        }
+    }
 }

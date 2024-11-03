@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TelefonoModelCli {
-    private String num;
-    private String oper;
-    private Integer duenio;
+
+    private String number;
+    private String company;
+    private String idPerson;
+    
 }

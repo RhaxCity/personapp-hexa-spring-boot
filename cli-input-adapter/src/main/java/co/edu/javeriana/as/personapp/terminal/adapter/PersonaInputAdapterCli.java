@@ -12,6 +12,7 @@ import co.edu.javeriana.as.personapp.application.usecase.PersonUseCase;
 import co.edu.javeriana.as.personapp.common.annotations.Adapter;
 import co.edu.javeriana.as.personapp.common.exceptions.InvalidOptionException;
 import co.edu.javeriana.as.personapp.common.setup.DatabaseOption;
+import co.edu.javeriana.as.personapp.domain.Person;
 import co.edu.javeriana.as.personapp.terminal.mapper.PersonaMapperCli;
 import co.edu.javeriana.as.personapp.terminal.model.PersonaModelCli;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,56 @@ public class PersonaInputAdapterCli {
 	    personInputPort.findAll().stream()
 	        .map(personaMapperCli::fromDomainToAdapterCli)
 	        .forEach(System.out::println);
+	}
+
+	public void crearPersona(PersonaModelCli persona, String dbOption) {
+		log.info("Into crear PersonaEntity in Input Adapter");
+		try {
+			setPersonOutputPortInjection(dbOption);
+			personInputPort.create(personaMapperCli.fromAdapterCliToDomain(persona));
+			System.out.println("Persona creada correctamente: " + persona.toString());
+		} catch (Exception e) {
+			log.warn(e.getMessage());
+			System.out.println("Error al crear persona");
+		}
+	}
+
+	public void editarPersona(PersonaModelCli persona, String dbOption) {
+		log.info("Into editar PersonaEntity in Input Adapter");
+		try {
+			setPersonOutputPortInjection(dbOption);
+			personInputPort.edit(persona.getCc(),personaMapperCli.fromAdapterCliToDomain(persona));
+			System.out.println("Persona editada correctamente: " + persona.toString());
+		} catch (Exception e) {
+			log.warn(e.getMessage());
+			System.out.println("Error al editar persona");
+		}
+	}
+
+	public void eliminarPersona(String dbOption, int cc) {
+		log.info("Into eliminar PersonaEntity in Input Adapter");
+		try {
+			setPersonOutputPortInjection(dbOption);
+			boolean resultado = personInputPort.drop(cc);
+			if (resultado)
+				System.out.println("Persona eliminada correctamente: " + cc);
+		} catch (Exception e) {
+			log.warn(e.getMessage());
+			System.out.println("Error al eliminar persona");
+		}
+	}
+
+	public void buscarPersona(String dbOption, int cc) {
+		log.info("Into buscar PersonaEntity in Input Adapter");
+		try {
+			setPersonOutputPortInjection(dbOption);
+			Person person = personInputPort.findOne(cc);
+			PersonaModelCli persona = personaMapperCli.fromDomainToAdapterCli(person);
+			System.out.println("Persona encontrada: " + persona.toString());
+		} catch (Exception e) {
+			log.warn(e.getMessage());
+			System.out.println("Error al buscar persona");
+		}
 	}
 
 }
