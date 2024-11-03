@@ -5,6 +5,7 @@ import co.edu.javeriana.as.personapp.common.annotations.Adapter;
 import co.edu.javeriana.as.personapp.domain.Profession;
 import co.edu.javeriana.as.personapp.mongo.document.ProfesionDocument;
 import co.edu.javeriana.as.personapp.mongo.mapper.ProfesionMapperMongo;
+import co.edu.javeriana.as.personapp.mongo.repository.EstudiosRepositoryMongo;
 import co.edu.javeriana.as.personapp.mongo.repository.ProfesionRepositoryMongo;
 import com.mongodb.MongoWriteException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
 public class ProfessionOutputAdapterMongo implements ProfessionOutputPort {
     @Autowired
     private ProfesionRepositoryMongo professionRepositoryMongo;
+
+    @Autowired
+    private EstudiosRepositoryMongo studyRepositoryMongo;
 
     @Autowired
     private ProfesionMapperMongo professionMapperMongo;
@@ -35,10 +39,25 @@ public class ProfessionOutputAdapterMongo implements ProfessionOutputPort {
     }
 
     @Override
-    public Boolean delete(Integer identification) {
+    public Boolean delete(Integer professionId) {
         log.debug("Into delete on Adapter MongoDB");
-        professionRepositoryMongo.deleteById(identification);
-        return professionRepositoryMongo.findById(identification).isEmpty();
+        
+        // Verifica si la profesión existe
+        if (professionRepositoryMongo.existsById(professionId)) {
+            // Elimina todos los estudios asociados a la profesión
+            ProfesionDocument profesion = professionRepositoryMongo.findById(professionId).orElse(null);
+
+            studyRepositoryMongo.deleteByPrimaryProfesion(profesion);
+
+            // Elimina la profesión
+            professionRepositoryMongo.deleteById(professionId);
+            
+            // Verifica si la profesión fue eliminada correctamente
+            return !professionRepositoryMongo.existsById(professionId);
+        } else {
+            log.warn("No profession found with ID: " + professionId);
+            return false; // Retorna falso si no se encontró la profesión
+        }
     }
 
     @Override
