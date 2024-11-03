@@ -27,7 +27,7 @@ public class ProfesionControllerV1 {
     })
     @ResponseBody
     @GetMapping(path = "/{database}", produces = "application/json")
-    public List<ProfesionResponse> profesiones(
+    public List<ProfesionResponse> historial(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "myDatabase")
             @PathVariable String database) {
         log.info("Into profesiones REST API");

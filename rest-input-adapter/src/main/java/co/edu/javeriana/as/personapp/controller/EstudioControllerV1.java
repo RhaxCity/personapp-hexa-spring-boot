@@ -28,7 +28,7 @@ public class EstudioControllerV1 {
     })
     @ResponseBody
     @GetMapping(path = "/{database}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<EstudioResponse> estudios(
+    public List<EstudioResponse> historial(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "1")
             @PathVariable String database) {
         log.info("Into estudios REST API");
@@ -48,5 +48,6 @@ public class EstudioControllerV1 {
         log.info("esta en el metodo crearEstudio en el controller del api");
         return estudioInputAdapterRest.createStudy(request);
     }
+    
 }
 

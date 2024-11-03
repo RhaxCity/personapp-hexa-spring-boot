@@ -28,7 +28,7 @@ public class TelefonoControllerV1 {
     })
     @ResponseBody
     @GetMapping(path="/{database}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<TelefonoResponse> telefonos(
+    public List<TelefonoResponse> historial(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "myDatabase")
             @PathVariable String database){
         log.info("Into telefonos REST API");

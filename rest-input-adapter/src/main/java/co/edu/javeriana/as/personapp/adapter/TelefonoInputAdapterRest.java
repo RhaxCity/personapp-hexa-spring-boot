@@ -114,7 +114,9 @@ public class TelefonoInputAdapterRest {
         try{
             setPhoneOutputPortInjection(request.getDatabase());
             Person owner = personInputPort.findOne(Integer.parseInt(request.getOwner()));
+            log.info("Owner unicornio: "+owner.toString());
             Phone phone = phoneInputPort.edit(request.getNumber(),telefonoMapperRest.fromAdapterToDomain(request, owner));
+            log.info("Phone unicornio: "+phone.toString());
             return telefonoMapperRest.fromDomainToAdapterRestMaria(phone);
         } catch (Exception e) {
             log.warn("Invalid database option: " + request.getDatabase()+" "+e.getMessage());
