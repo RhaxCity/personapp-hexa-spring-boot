@@ -17,40 +17,49 @@ import java.util.stream.Collectors;
 @Adapter("studyOutputAdapterMaria")
 @Transactional
 public class StudyOutputAdapterMaria implements StudyOutputPort {
-    @Autowired
-    private EstudiosRepositoryMaria estudiosRepositoryMaria;
 
     @Autowired
-    private EstudiosMapperMaria estudiosMapperMaria;
+    private EstudiosRepositoryMaria estudioRepositoryMaria;
+
+    @Autowired
+    private EstudiosMapperMaria estudioMapperMaria;
 
     @Override
     public Study save(Study study) {
-        log.debug("Into save on Adapter MariaDB");
-        EstudiosEntity persistedEstudios = estudiosRepositoryMaria.save(estudiosMapperMaria.fromDomainToAdapter(study));
-        return estudiosMapperMaria.fromAdapterToDomain(persistedEstudios);
+        log.warn("Into save on Adapter MariaDB");
+        log.warn("Mapping from domain to adapter prints"+ study);
+        log.warn("Mapping from domain to adapter prints"+ estudioMapperMaria.fromDomainToAdapter(study).getPersona());
+        EstudiosEntity persistedEstudio = estudioRepositoryMaria.save(estudioMapperMaria.fromDomainToAdapter(study));
+        
+        return estudioMapperMaria.fromAdapterToDomain(persistedEstudio);
     }
 
     @Override
-    public Boolean delete(Integer identification) {
+    public Boolean delete(Integer professionID, Integer personID) {
         log.debug("Into delete on Adapter MariaDB");
-        estudiosRepositoryMaria.deleteById(identification);
-        return estudiosRepositoryMaria.findById(identification).isEmpty();
+        EstudiosEntity estudios = estudioRepositoryMaria.findByProfesionAndPersona(professionID, personID);
+        if(estudios == null){
+            return false;
+        }
+        estudioRepositoryMaria.delete(estudios);
+        return estudioRepositoryMaria.findByProfesionAndPersona(professionID,personID) == null;
+
     }
 
     @Override
     public List<Study> find() {
-        log.debug("Into find on Adapter MariaDB");
-        return estudiosRepositoryMaria.findAll().stream().map(estudiosMapperMaria::fromAdapterToDomain)
+        log.warn("Into find on Adapter MariaDB");
+        return estudioRepositoryMaria.findAll().stream().map(estudioMapperMaria::fromAdapterToDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Study findById(Integer identification) {
+    public Study findById(Integer professionID, Integer personID) {
         log.debug("Into findById on Adapter MariaDB");
-        if (estudiosRepositoryMaria.findById(identification).isEmpty()) {
+        EstudiosEntity estudios = estudioRepositoryMaria.findByProfesionAndPersona(professionID, personID);
+        if (estudios == null) {
             return null;
-        } else {
-            return estudiosMapperMaria.fromAdapterToDomain(estudiosRepositoryMaria.findById(identification).get());
         }
+        return estudioMapperMaria.fromAdapterToDomain(estudios);
     }
 }

@@ -8,6 +8,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import co.edu.javeriana.as.personapp.common.annotations.Mapper;
+import co.edu.javeriana.as.personapp.domain.Gender;
 import co.edu.javeriana.as.personapp.domain.Person;
 import co.edu.javeriana.as.personapp.domain.Profession;
 import co.edu.javeriana.as.personapp.domain.Study;
@@ -37,7 +38,8 @@ public class EstudiosMapperMaria {
         estudio.setEstudiosPK(estudioPK);
         estudio.setFecha(validateFecha(study.getGraduationDate()));
         estudio.setUniver(validateUniver(study.getUniversityName()));
-        
+        estudio.setPersona(personaMapperMaria.fromDomainToAdapter(study.getPerson()));
+        estudio.setProfesion(profesionMapperMaria.fromDomainToAdapter(study.getProfession()));
         return estudio;
     }
 
@@ -54,7 +56,7 @@ public class EstudiosMapperMaria {
     public Study fromAdapterToDomain(EstudiosEntity estudiosEntity) {
         Study study = new Study();
 		
-		log.warn("Mapping from adapter to domain"+ estudiosEntity);
+		log.warn("Mapping from adapter to domain"+ estudiosEntity+ " "+estudiosEntity.getPersona());
 
         // En lugar de llamar al adaptador, construir directamente con identificador
         study.setPerson(validatePrimaryPersona(estudiosEntity.getPersona()));
@@ -63,6 +65,9 @@ public class EstudiosMapperMaria {
         study.setGraduationDate(validateGraduationDate(estudiosEntity.getFecha()));
         study.setUniversityName(validateUniversityName(estudiosEntity.getUniver()));
         
+
+        log.warn("Resultado"+ study);
+
         return study; // Retornar el objeto Study construido
     }
 
@@ -97,12 +102,25 @@ public class EstudiosMapperMaria {
     private @NonNull Person validatePrimaryPersona(@NonNull PersonaEntity persona) {
         Person owner = new Person();
         owner.setIdentification(persona.getCc()); // Asigna solo el ID
+        owner.setFirstName(persona.getNombre());
+        owner.setLastName(persona.getApellido());
+        owner.setAge(persona.getEdad());
+        if(persona.getGenero()=='M')
+        {
+            owner.setGender(Gender.MALE);
+        }
+        else
+        {
+            owner.setGender(Gender.FEMALE);
+        }
         return owner;
     }
 
     private @NonNull Profession validatePrimaryProfesion(@NonNull ProfesionEntity profesion) {
         Profession profession = new Profession();
         profession.setIdentification(profesion.getId()); // Asigna solo el ID
+        profession.setDescription(profesion.getDes());
+        profesion.setNom(profesion.getNom());
         return profession;
     }
 }

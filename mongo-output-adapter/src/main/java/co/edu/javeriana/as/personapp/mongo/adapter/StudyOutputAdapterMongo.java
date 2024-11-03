@@ -6,6 +6,7 @@ import co.edu.javeriana.as.personapp.domain.Study;
 import co.edu.javeriana.as.personapp.mongo.document.EstudiosDocument;
 import co.edu.javeriana.as.personapp.mongo.mapper.EstudiosMapperMongo;
 import co.edu.javeriana.as.personapp.mongo.repository.EstudiosRepositoryMongo;
+
 import com.mongodb.MongoWriteException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,45 +17,52 @@ import java.util.stream.Collectors;
 @Slf4j
 @Adapter("studyOutputAdapterMongo")
 public class StudyOutputAdapterMongo implements StudyOutputPort {
+
     @Autowired
     private EstudiosRepositoryMongo estudioRepositoryMongo;
 
     @Autowired
-    private EstudiosMapperMongo estudiosMapperMongo;
+    private EstudiosMapperMongo estudioMapperMongo;
 
     @Override
     public Study save(Study study) {
         log.debug("Into save on Adapter MongoDB");
         try {
-            EstudiosDocument persistedEstudio = estudioRepositoryMongo.save(estudiosMapperMongo.fromDomainToAdapter(study));
-            return estudiosMapperMongo.fromAdapterToDomain(persistedEstudio);
-        } catch (MongoWriteException e) {
+            EstudiosDocument persistedEstudio = estudioRepositoryMongo.save(estudioMapperMongo.fromDomainToAdapter(study));
+            return estudioMapperMongo.fromAdapterToDomain(persistedEstudio);
+        }catch (MongoWriteException e)
+        {
             log.warn(e.getMessage());
             return study;
         }
     }
 
     @Override
-    public Boolean delete(Integer identification) {
+    public Boolean delete(Integer professionID, Integer personID) {
         log.debug("Into delete on Adapter MongoDB");
-        estudioRepositoryMongo.deleteById(identification);
-        return estudioRepositoryMongo.findById(identification).isEmpty();
+        EstudiosDocument estudio = estudioRepositoryMongo.findByPrimaryProfesionAndPrimaryPersona(professionID, personID);
+        if (estudio == null) {
+            return false;
+        }
+        estudioRepositoryMongo.delete(estudio);
+        return estudioRepositoryMongo.findByPrimaryProfesionAndPrimaryPersona(professionID, personID) == null;
     }
 
     @Override
     public List<Study> find() {
         log.debug("Into find on Adapter MongoDB");
-        return estudioRepositoryMongo.findAll().stream().map(estudiosMapperMongo::fromAdapterToDomain)
+        return estudioRepositoryMongo.findAll().stream().map(estudioMapperMongo::fromAdapterToDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Study findById(Integer identification) {
+    public Study findById(Integer proffesionID, Integer personID) {
         log.debug("Into findById on Adapter MongoDB");
-        if (estudioRepositoryMongo.findById(identification).isEmpty()) {
+        EstudiosDocument estudio = estudioRepositoryMongo.findByPrimaryProfesionAndPrimaryPersona(proffesionID, personID);
+        if (estudio == null) {
             return null;
         } else {
-            return estudiosMapperMongo.fromAdapterToDomain(estudioRepositoryMongo.findById(identification).get());
+            return estudioMapperMongo.fromAdapterToDomain(estudio);
         }
     }
 }
