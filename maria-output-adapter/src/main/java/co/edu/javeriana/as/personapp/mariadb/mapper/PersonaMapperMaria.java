@@ -31,6 +31,7 @@ public class PersonaMapperMaria {
 		PersonaEntity personaEntity = new PersonaEntity();
 
 		log.warn("Mapping from domain to adapter"+ person);
+		
 		personaEntity.setCc(person.getIdentification());
 		personaEntity.setNombre(person.getFirstName());
 		personaEntity.setApellido(person.getLastName());
@@ -64,7 +65,7 @@ public class PersonaMapperMaria {
 	public Person fromAdapterToDomain(PersonaEntity personaEntity) {
 		Person person = new Person();
 
-		log.warn("Mapping from domain to adapter"+ personaEntity);
+		log.warn("Mapping from adapter to domain"+ personaEntity);
 
 		person.setIdentification(personaEntity.getCc());
 		person.setFirstName(personaEntity.getNombre());

@@ -109,8 +109,7 @@ public class PersonaInputAdapterRest {
 	public PersonaResponse editarPersona(PersonaRequest personaRequest){
 		try{
 			setPersonOutputPortInjection(personaRequest.getDatabase());
-			Person person = personInputPort.edit(Integer.parseInt(personaRequest.getDni()),personaMapperRest.fromAdapterToDomain(personaRequest));
-			return personaMapperRest.fromDomainToAdapterRestMaria(person);
+			return personaMapperRest.fromDomainToAdapterRestMaria(personInputPort.edit(Integer.parseInt(personaRequest.getDni()), personaMapperRest.fromAdapterToDomain(personaRequest)));
 		}catch (Exception e){
 			log.warn(e.getMessage());
 			//return new PersonaResponse("", "", "", "", "", "", "");
