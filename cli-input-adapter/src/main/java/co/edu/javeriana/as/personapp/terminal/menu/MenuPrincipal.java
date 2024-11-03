@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 public class MenuPrincipal {
 	
-	//Beans
+	// Beans
 	@Autowired
 	private PersonaInputAdapterCli personaInputAdapterCli;
 
@@ -27,32 +27,30 @@ public class MenuPrincipal {
 	private TelefonoInputAdapterCli telefonoInputAdapterCli;
 
 	@Autowired
-	private EstudiosInputAdapterCli EstudiosInputAdapterCli;
+	private EstudiosInputAdapterCli estudiosInputAdapterCli;
 
 	private static final int SALIR = 0;
 	private static final int MODULO_PERSONA = 1;
 	private static final int MODULO_PROFESION = 2;
 	private static final int MODULO_TELEFONO = 3;
-	private static final int MODULO_Estudios = 4;
+	private static final int MODULO_ESTUDIOS = 4;
 
-	//Menus
+	// Menus
 	private final PersonaMenu personaMenu;
 	private final ProfesionMenu profesionMenu;
 	private final TelefonoMenu telefonoMenu;
-	private final EstudiosMenu EstudiosMenu;
+	private final EstudiosMenu estudiosMenu;
 	private final Scanner keyboard;
 
     public MenuPrincipal() {
         this.personaMenu = new PersonaMenu();
 		this.profesionMenu = new ProfesionMenu();
 		this.telefonoMenu = new TelefonoMenu();
-		this.EstudiosMenu = new EstudiosMenu();
+		this.estudiosMenu = new EstudiosMenu();
         this.keyboard = new Scanner(System.in);
     }
 
 	public void inicio() {
-		
-		//personaMenu = new PersonaMenu(personaInputAdapterCli);
 		boolean isValid = false;
 		do {
 			mostrarMenu();
@@ -60,26 +58,26 @@ public class MenuPrincipal {
 			switch (opcion) {
 			case SALIR:
 				isValid = true;
+				log.info("Saliendo del sistema.");
 				break;
 			case MODULO_PERSONA:
+				log.info("Accediendo al módulo de Personas.");
 				personaMenu.iniciarMenu(personaInputAdapterCli, keyboard);
-				log.info("volvio");
 				break;
 			case MODULO_PROFESION:
+				log.info("Accediendo al módulo de Profesiones.");
 				profesionMenu.iniciarMenu(profesionInputAdapterCli, keyboard);
-				log.info("volvio");
 				break;
 			case MODULO_TELEFONO:
+				log.info("Accediendo al módulo de Teléfonos.");
 				telefonoMenu.iniciarMenu(telefonoInputAdapterCli, keyboard);
-				log.info("volvio");
-
 				break;
-			case MODULO_Estudios:
-				EstudiosMenu.iniciarMenu(EstudiosInputAdapterCli, keyboard);
-				log.info("volvio");
+			case MODULO_ESTUDIOS:
+				log.info("Accediendo al módulo de Estudios.");
+				estudiosMenu.iniciarMenu(estudiosInputAdapterCli, keyboard);
 				break;
 			default:
-				log.warn("La opción elegida no es válida.");
+				log.warn("La opción elegida no es válida: " + opcion);
 			}
 
 		} while (!isValid);
@@ -88,11 +86,13 @@ public class MenuPrincipal {
 
 	private void mostrarMenu() {
 		System.out.println("----------------------");
-		System.out.println(MODULO_PERSONA + " para trabajar con el Modulo de Personas");
-		System.out.println(MODULO_PROFESION + " para trabajar con el Modulo de Profesiones");
-		System.out.println(MODULO_TELEFONO + " para trabajar con el Modulo de Telefonos");
-		System.out.println(MODULO_Estudios + " para trabajar con el Modulo de Estudioss");
-		System.out.println(SALIR + " para Salir");
+		System.out.println("MENÚ PRINCIPAL");
+		System.out.println(MODULO_PERSONA + " - Módulo de Personas");
+		System.out.println(MODULO_PROFESION + " - Módulo de Profesiones");
+		System.out.println(MODULO_TELEFONO + " - Módulo de Teléfonos");
+		System.out.println(MODULO_ESTUDIOS + " - Módulo de Estudios");
+		System.out.println(SALIR + " - Salir");
+		System.out.println("----------------------");
 	}
 
 	private int leerOpcion() {
@@ -100,9 +100,9 @@ public class MenuPrincipal {
 			System.out.print("Ingrese una opción: ");
 			return keyboard.nextInt();
 		} catch (InputMismatchException e) {
-			log.warn("Solo se permiten números.");
+			log.warn("Solo se permiten números. Error: " + e.getMessage());
+			keyboard.next(); // Limpiar el buffer
 			return leerOpcion();
 		}
 	}
-
 }

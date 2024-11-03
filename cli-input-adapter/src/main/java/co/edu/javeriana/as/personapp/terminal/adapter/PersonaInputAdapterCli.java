@@ -51,10 +51,27 @@ public class PersonaInputAdapterCli {
 		persona.forEach(p -> System.out.println(p.toString()));
 	}
 	public void historial() {
-	    log.info("Into historial PersonaEntity in Input Adapter");
-	    personInputPort.findAll().stream()
-	        .map(personaMapperCli::fromDomainToAdapterCli)
-	        .forEach(System.out::println);
+		log.info("Into historial PersonaEntity in Input Adapter");
+		List<PersonaModelCli> personas = personInputPort.findAll().stream()
+				.map(personaMapperCli::fromDomainToAdapterCli)
+				.collect(Collectors.toList());
+	
+		imprimirTabla(personas);
+	}
+	
+	private void imprimirTabla(List<PersonaModelCli> personas) {
+		System.out.println("---------------------------------------------------------------------------");
+		System.out.printf("%-15s %-20s %-20s %-10s %-10s%n", "Identificación", "Nombre", "Apellido", "Género", "Edad");
+		System.out.println("---------------------------------------------------------------------------");
+		for (PersonaModelCli persona : personas) {
+			System.out.printf("%-15d %-20s %-20s %-10s %-10d%n",
+					persona.getCc(),
+					persona.getNombre(),
+					persona.getApellido(),
+					persona.getGenero(),
+					persona.getEdad());
+		}
+		System.out.println("---------------------------------------------------------------------------");
 	}
 
 	public void crearPersona(PersonaModelCli persona, String dbOption) {
@@ -62,7 +79,8 @@ public class PersonaInputAdapterCli {
 		try {
 			setPersonOutputPortInjection(dbOption);
 			personInputPort.create(personaMapperCli.fromAdapterCliToDomain(persona));
-			System.out.println("Persona creada correctamente: " + persona.toString());
+			// Imprimimos la tabla con la persona creada
+			imprimirTabla(List.of(persona)); // Puedes necesitar ajustar esto si persona no es del tipo PersonaModelCli.
 		} catch (Exception e) {
 			log.warn(e.getMessage());
 			System.out.println("Error al crear persona");
@@ -73,8 +91,9 @@ public class PersonaInputAdapterCli {
 		log.info("Into editar PersonaEntity in Input Adapter");
 		try {
 			setPersonOutputPortInjection(dbOption);
-			personInputPort.edit(persona.getCc(),personaMapperCli.fromAdapterCliToDomain(persona));
-			System.out.println("Persona editada correctamente: " + persona.toString());
+			personInputPort.edit(persona.getCc(), personaMapperCli.fromAdapterCliToDomain(persona));
+			// Imprimimos la tabla con la persona editada
+			imprimirTabla(List.of(persona));
 		} catch (Exception e) {
 			log.warn(e.getMessage());
 			System.out.println("Error al editar persona");
@@ -99,8 +118,15 @@ public class PersonaInputAdapterCli {
 		try {
 			setPersonOutputPortInjection(dbOption);
 			Person person = personInputPort.findOne(cc);
-			PersonaModelCli persona = personaMapperCli.fromDomainToAdapterCli(person);
-			System.out.println("Persona encontrada: " + persona.toString());
+			if (person != null) {
+				PersonaModelCli persona = personaMapperCli.fromDomainToAdapterCli(person);
+				// Aquí creamos una lista solo con la persona encontrada
+				List<PersonaModelCli> personaList = List.of(persona);
+				// Imprimimos la tabla
+				imprimirTabla(personaList);
+			} else {
+				System.out.println("Persona no encontrada con identificación: " + cc);
+			}
 		} catch (Exception e) {
 			log.warn(e.getMessage());
 			System.out.println("Error al buscar persona");

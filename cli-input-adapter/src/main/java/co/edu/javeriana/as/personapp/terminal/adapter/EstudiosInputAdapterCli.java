@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Adapter
 public class EstudiosInputAdapterCli {
@@ -53,7 +56,7 @@ public class EstudiosInputAdapterCli {
     private ProfessionOutputPort professionOutputPortMongo;
 
     @Autowired
-    private EstudiosMapperCli EstudiosMapperCli;
+    private EstudiosMapperCli estudiosMapperCli;
 
     //Puertos de entrada a la aplicación
     StudyInputPort studyInputPort;
@@ -62,42 +65,38 @@ public class EstudiosInputAdapterCli {
 
     public void setStudyOutputPortInjection(String dbOption) throws InvalidOptionException {
         if (dbOption.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
-
             studyInputPort = new StudyUseCase(studyOutputPortMaria);
             professionInputPort = new ProfessionUseCase(professionOutputPortMaria);
             personInputPort = new PersonUseCase(personOutputPortMaria);
-
         } else if (dbOption.equalsIgnoreCase(DatabaseOption.MONGO.toString())) {
-
             studyInputPort = new StudyUseCase(studyOutputPortMongo);
             professionInputPort = new ProfessionUseCase(professionOutputPortMongo);
             personInputPort = new PersonUseCase(personOutputPortMongo);
-
         } else {
             throw new InvalidOptionException("Invalid database option: " + dbOption);
         }
     }
 
-    public void historial(){
+    public void historial() {
         log.info("Into historial StudyEntity in Input Adapter");
-        studyInputPort.findAll().stream()
-            .map(EstudiosMapperCli::fromDomainToAdapterCli)
-            .forEach(System.out::println);
+        List<EstudiosModelCli> estudios = studyInputPort.findAll().stream()
+            .map(estudiosMapperCli::fromDomainToAdapterCli)
+            .collect(Collectors.toList());
+        imprimirTabla(estudios);
     }
 
-    public void crearEstudios(EstudiosModelCli Estudios, String dbOption){
+    public void crearEstudios(EstudiosModelCli estudios, String dbOption) {
         log.info("Into crearEstudios StudyEntity in Input Adapter");
-        try{
+        try {
             setStudyOutputPortInjection(dbOption);
-
-            Person person = personInputPort.findOne(Integer.parseInt(Estudios.getIdPerson()));
-
-            Profession profession = professionInputPort.findOne(Integer.parseInt(Estudios.getIdProfession()));
-            studyInputPort.create(EstudiosMapperCli.fromAdapterCliToDomain(Estudios, profession, person));
-            System.out.println("Estudios creado correctamente "+Estudios.toString());
-        }catch (Exception e){
+            Person person = personInputPort.findOne(Integer.parseInt(estudios.getIdPerson()));
+            Profession profession = professionInputPort.findOne(Integer.parseInt(estudios.getIdProfession()));
+            studyInputPort.create(estudiosMapperCli.fromAdapterCliToDomain(estudios, profession, person));
+            System.out.println("Estudios creado correctamente " + estudios.toString());
+            imprimirTabla(List.of(estudios)); // Imprimir la tabla con el estudio creado
+        } catch (Exception e) {
             log.warn(e.getMessage());
-            System.out.println("Error al crear el Estudios");
+            System.out.println("Error al crear el estudio");
         }
     }
 
@@ -106,7 +105,8 @@ public class EstudiosInputAdapterCli {
         try {
             Study estudio = studyInputPort.findOne(idProfesion, idPersona);
             if (estudio != null) {
-                System.out.println(mapStudyToReadableString(estudio));
+                List<EstudiosModelCli> estudios = List.of(estudiosMapperCli.fromDomainToAdapterCli(estudio));
+                imprimirTabla(estudios); // Imprimir la tabla con el estudio encontrado
             } else {
                 System.out.println("No se encontró ningún estudio para la profesión con ID: " + idProfesion +
                         " y la persona con ID: " + idPersona);
@@ -116,40 +116,44 @@ public class EstudiosInputAdapterCli {
             System.out.println("Error al buscar estudio por profesión y persona");
         }
     }
-    
-    private String mapStudyToReadableString(Study estudio) {
-        return "ID: " + estudio.getPerson().getIdentification() +
-                ", Profesion: " + estudio.getProfession().getIdentification() +
-                ", Universidad: " + estudio.getUniversityName() +
-                ", Fecha de graduación: " + estudio.getGraduationDate();
+
+    private void imprimirTabla(List<EstudiosModelCli> estudios) {
+        System.out.println("---------------------------------------------------------------------------");
+        System.out.printf("%-15s %-20s %-20s %-30s %-20s%n", "ID Persona", "ID Profesion", "Universidad", "Fecha de Graduación");
+        System.out.println("---------------------------------------------------------------------------");
+        for (EstudiosModelCli estudio : estudios) {
+            System.out.printf("%-15s %-20s %-20s %-30s %-20s%n",
+                    estudio.getIdPerson(),
+                    estudio.getIdProfession(),
+                    estudio.getUniversityName(),
+                    estudio.getGraduationDate());
+        }
+        System.out.println("---------------------------------------------------------------------------");
     }
 
     public void editarEstudio(EstudiosModelCli estudios, String dbOption) {
         log.info("Into editarEstudio StudyEntity in Input Adapter");
         try {
             setStudyOutputPortInjection(dbOption);
-
             Integer idPerson = Integer.parseInt(estudios.getIdPerson());
             Integer idProfession = Integer.parseInt(estudios.getIdProfession());
-
             Person person = personInputPort.findOne(idPerson);
-            
             Profession profession = professionInputPort.findOne(idProfession);
-
-            studyInputPort.edit(idProfession, idPerson, EstudiosMapperCli.fromAdapterCliToDomain(estudios, profession, person));
+            studyInputPort.edit(idProfession, idPerson, estudiosMapperCli.fromAdapterCliToDomain(estudios, profession, person));
             System.out.println("Estudio editado correctamente " + estudios.toString());
+            imprimirTabla(List.of(estudios)); // Imprimir la tabla con el estudio editado
         } catch (Exception e) {
             log.warn(e.getMessage());
             System.out.println("Error al editar el estudio");
         }
     }
 
-    public void eliminarEstudio(String dbOption, Integer idProfesion, Integer idPersona){
-        log.info("Into buscarEstudioPorProfesionYPersona StudyEntity in Input Adapter");
+    public void eliminarEstudio(String dbOption, Integer idProfesion, Integer idPersona) {
+        log.info("Into eliminarEstudio StudyEntity in Input Adapter");
         try {
-            boolean resultado = studyInputPort.drop(idProfesion,idPersona);
-			if (resultado){
-				System.out.println("Persona eliminada correctamente: " + idProfesion + idPersona);
+            boolean resultado = studyInputPort.drop(idProfesion, idPersona);
+            if (resultado) {
+                System.out.println("Estudio eliminado correctamente: " + idProfesion + " " + idPersona);
             } else {
                 System.out.println("No se encontró ningún estudio para la profesión con ID: " + idProfesion +
                         " y la persona con ID: " + idPersona);
@@ -159,5 +163,4 @@ public class EstudiosInputAdapterCli {
             System.out.println("Error al buscar estudio por profesión y persona");
         }
     }
-    
 }

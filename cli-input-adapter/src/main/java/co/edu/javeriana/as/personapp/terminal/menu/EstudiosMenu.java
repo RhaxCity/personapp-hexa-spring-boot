@@ -24,8 +24,7 @@ public class EstudiosMenu {
     private static final int OPCION_BUSCAR = 4;
     private static final int OPCION_ELIMINAR = 5;
 
-
-    public void iniciarMenu(EstudiosInputAdapterCli EstudiosInputAdapterCli, Scanner keyboard) {
+    public void iniciarMenu(EstudiosInputAdapterCli estudiosInputAdapterCli, Scanner keyboard) {
         boolean isValid = false;
         do {
             try {
@@ -34,19 +33,22 @@ public class EstudiosMenu {
                 switch (opcion) {
                     case OPCION_REGRESAR_MODULOS:
                         isValid = true;
+                        log.info("Regresando a los módulos.");
                         break;
                     case PERSISTENCIA_MARIADB:
-                        EstudiosMenu.DATABASE = "MARIA";
-                        EstudiosInputAdapterCli.setStudyOutputPortInjection("MARIA");
-                        menuOpciones(EstudiosInputAdapterCli, keyboard);
+                        DATABASE = "MARIA";
+                        estudiosInputAdapterCli.setStudyOutputPortInjection("MARIA");
+                        log.info("Seleccionado motor de persistencia: MariaDB.");
+                        menuOpciones(estudiosInputAdapterCli, keyboard);
                         break;
                     case PERSISTENCIA_MONGODB:
-                        EstudiosMenu.DATABASE = "MONGO";
-                        EstudiosInputAdapterCli.setStudyOutputPortInjection("MONGO");
-                        menuOpciones(EstudiosInputAdapterCli, keyboard);
+                        DATABASE = "MONGO";
+                        estudiosInputAdapterCli.setStudyOutputPortInjection("MONGO");
+                        log.info("Seleccionado motor de persistencia: MongoDB.");
+                        menuOpciones(estudiosInputAdapterCli, keyboard);
                         break;
                     default:
-                        log.warn("La opción elegida no es válida.");
+                        log.warn("La opción elegida no es válida: " + opcion);
                 }
             } catch (InvalidOptionException e) {
                 log.warn(e.getMessage());
@@ -54,7 +56,7 @@ public class EstudiosMenu {
         } while (!isValid);
     }
 
-    private void menuOpciones(EstudiosInputAdapterCli EstudiosInputAdapterCli, Scanner keyboard) {
+    private void menuOpciones(EstudiosInputAdapterCli estudiosInputAdapterCli, Scanner keyboard) {
         boolean isValid = false;
         do {
             try {
@@ -63,46 +65,56 @@ public class EstudiosMenu {
                 switch (opcion) {
                     case OPCION_REGRESAR_MOTOR_PERSISTENCIA:
                         isValid = true;
+                        log.info("Regresando al menú de motores de persistencia.");
                         break;
                     case OPCION_VER_TODO:
-                        EstudiosInputAdapterCli.historial();
+                        log.info("Visualizando todos los estudios.");
+                        estudiosInputAdapterCli.historial();
                         break;
                     case OPCION_CREAR:
-                        EstudiosInputAdapterCli.crearEstudios(leerEntidad(keyboard), EstudiosMenu.DATABASE);
+                        log.info("Creando un nuevo estudio.");
+                        estudiosInputAdapterCli.crearEstudios(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_ACTUALIZAR:
-                        EstudiosInputAdapterCli.editarEstudio(leerEntidad(keyboard), EstudiosMenu.DATABASE);
+                        log.info("Actualizando un estudio existente.");
+                        estudiosInputAdapterCli.editarEstudio(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_BUSCAR:
-                        buscarEstudio(EstudiosInputAdapterCli, keyboard);
+                        log.info("Buscando un estudio.");
+                        buscarEstudio(estudiosInputAdapterCli, keyboard);
                         break;
                     case OPCION_ELIMINAR:
-                        EstudiosInputAdapterCli.eliminarEstudio(EstudiosMenu.DATABASE, leerIdProfesion(keyboard), leerIdPersona(keyboard));
+                        log.info("Eliminando un estudio.");
+                        estudiosInputAdapterCli.eliminarEstudio(DATABASE, leerIdProfesion(keyboard), leerIdPersona(keyboard));
                         break;
                     default:
-                        log.warn("La opción elegida no es válida.");
+                        log.warn("La opción elegida no es válida: " + opcion);
                 }
             } catch (InputMismatchException e) {
-                log.warn("Solo se permiten números.");
+                log.warn("Solo se permiten números. Error: " + e.getMessage());
             }
         } while (!isValid);
     }
 
     private void mostrarMenuOpciones() {
         System.out.println("----------------------");
-        System.out.println(OPCION_VER_TODO + " para ver todos los Estudios");
-        System.out.println(OPCION_CREAR + " para crear un Estudios");
-        System.out.println(OPCION_ACTUALIZAR + " para actualizar un Estudios");
-        System.out.println(OPCION_BUSCAR + " para buscar un Estudios");
-        System.out.println(OPCION_ELIMINAR + " para eliminar un Estudios");
-        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " para regresar");
+        System.out.println("MENÚ DE ESTUDIOS");
+        System.out.println(OPCION_VER_TODO + " - Get All Estudios");
+        System.out.println(OPCION_CREAR + " - Create Estudio");
+        System.out.println(OPCION_ACTUALIZAR + " - Update Estudio");
+        System.out.println(OPCION_BUSCAR + " - Find Estudio");
+        System.out.println(OPCION_ELIMINAR + " - Delete Estudio");
+        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private void mostrarMenuMotorPersistencia() {
         System.out.println("----------------------");
-        System.out.println(PERSISTENCIA_MARIADB + " para MariaDB");
-        System.out.println(PERSISTENCIA_MONGODB + " para MongoDB");
-        System.out.println(OPCION_REGRESAR_MODULOS + " para regresar");
+        System.out.println("SELECCIONAR MOTOR DE PERSISTENCIA");
+        System.out.println(PERSISTENCIA_MARIADB + " - MariaDB");
+        System.out.println(PERSISTENCIA_MONGODB + " - MongoDB");
+        System.out.println(OPCION_REGRESAR_MODULOS + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private int leerOpcion(Scanner keyboard) {
@@ -111,22 +123,23 @@ public class EstudiosMenu {
             return keyboard.nextInt();
         } catch (InputMismatchException e) {
             log.warn("Solo se permiten números.");
+            keyboard.nextLine(); // Limpiar el buffer
             return leerOpcion(keyboard);
         }
     }
 
     public EstudiosModelCli leerEntidad(Scanner keyboard) {
         try {
-            EstudiosModelCli EstudiosModelCli = new EstudiosModelCli();
+            EstudiosModelCli estudiosModelCli = new EstudiosModelCli();
             keyboard.nextLine();
             System.out.println("Ingrese la identificación de la persona:");
-            EstudiosModelCli.setIdPerson(keyboard.nextLine());
+            estudiosModelCli.setIdPerson(keyboard.nextLine());
             System.out.println("Ingrese la identificación de la profesión:");
-            EstudiosModelCli.setIdProfession(keyboard.nextLine());
+            estudiosModelCli.setIdProfession(keyboard.nextLine());
             System.out.println("Ingrese el nombre de la universidad:");
-            EstudiosModelCli.setUniversityName(keyboard.nextLine());
-            EstudiosModelCli.setGraduationDate(leerFecha(keyboard));
-            return EstudiosModelCli;
+            estudiosModelCli.setUniversityName(keyboard.nextLine());
+            estudiosModelCli.setGraduationDate(leerFecha(keyboard));
+            return estudiosModelCli;
         } catch (Exception e) {
             System.out.println("Datos incorrectos, ingrese los datos nuevamente.");
             return leerEntidad(keyboard);
@@ -140,15 +153,15 @@ public class EstudiosMenu {
             String[] fechaArray = fecha.split("/");
             return LocalDate.of(Integer.parseInt(fechaArray[2]), Integer.parseInt(fechaArray[1]), Integer.parseInt(fechaArray[0]));
         } catch (Exception e) {
-            System.out.println("Fecha no válida, ingrese nuevamente");
+            System.out.println("Fecha no válida, ingrese nuevamente.");
             return leerFecha(keyboard);
         }
     }
 
-    private void buscarEstudio(EstudiosInputAdapterCli EstudiosInputAdapterCli, Scanner keyboard) {
+    private void buscarEstudio(EstudiosInputAdapterCli estudiosInputAdapterCli, Scanner keyboard) {
         Integer idProfesion = leerIdProfesion(keyboard);
         Integer idPersona = leerIdPersona(keyboard);
-        EstudiosInputAdapterCli.buscarEstudio(EstudiosMenu.DATABASE, idProfesion, idPersona);
+        estudiosInputAdapterCli.buscarEstudio(DATABASE, idProfesion, idPersona);
     }
     
     private Integer leerIdProfesion(Scanner keyboard) {
@@ -172,5 +185,4 @@ public class EstudiosMenu {
             return leerIdPersona(keyboard);
         }
     }
-
 }

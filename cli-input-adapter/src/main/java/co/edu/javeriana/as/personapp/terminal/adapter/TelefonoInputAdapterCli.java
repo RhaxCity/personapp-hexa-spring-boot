@@ -17,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Adapter
 public class TelefonoInputAdapterCli {
@@ -42,58 +45,69 @@ public class TelefonoInputAdapterCli {
     @Autowired
     private TelefonoMapperCli telefonoMapperCli;
 
-
-    PhoneInputPort phoneInputPort;
-    PersonInputPort personInputPort;
+    private PhoneInputPort phoneInputPort;
+    private PersonInputPort personInputPort;
 
     public void setPhoneOutputPortInjection(String dbOption) throws InvalidOptionException {
         if (dbOption.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
-
             phoneInputPort = new PhoneUseCase(phoneOutputPortMaria);
             personInputPort = new PersonUseCase(personOutputPortMaria);
-
         } else if (dbOption.equalsIgnoreCase(DatabaseOption.MONGO.toString())) {
-
             phoneInputPort = new PhoneUseCase(phoneOutputPortMongo);
             personInputPort = new PersonUseCase(personOutputPortMongo);
-
         } else {
             throw new InvalidOptionException("Invalid database option: " + dbOption);
         }
     }
 
-    public void historial(){
+    public void historial() {
         log.info("Into historial TelefonoEntity in Input Adapter");
-        phoneInputPort.findAll().stream()
-            .map(telefonoMapperCli::fromDomainToAdapterCli)
-            .forEach(System.out::println);
+        List<TelefonoModelCli> telefonos = phoneInputPort.findAll().stream()
+                .map(telefonoMapperCli::fromDomainToAdapterCli)
+                .collect(Collectors.toList());
+        imprimirTabla(telefonos);
+    }
+
+    private void imprimirTabla(List<TelefonoModelCli> telefonos) {
+        System.out.println("---------------------------------------------------------------------------");
+        System.out.printf("%-15s %-15s %-20s%n", "Número", "ID Persona", "Compañia");
+        System.out.println("---------------------------------------------------------------------------");
+        for (TelefonoModelCli telefono : telefonos) {
+            System.out.printf("%-15s %-15s %-20s%n",
+                    telefono.getNumber(),
+                    telefono.getIdPerson(),
+                    telefono.getCompany());
+        }
+        System.out.println("---------------------------------------------------------------------------");
     }
 
     public void crearTelefono(TelefonoModelCli telefonoModelCli, String database) {
         log.info("Into crear TelefonoEntity in Input Adapter");
-        try{
+        try {
             setPhoneOutputPortInjection(database);
-            //Find person by id
+            // Find person by id
             Person owner = personInputPort.findOne(Integer.parseInt(telefonoModelCli.getIdPerson()));
             Phone phone = phoneInputPort.create(telefonoMapperCli.fromAdapterCliToDomain(telefonoModelCli, owner));
             System.out.println("Telefono creado correctamente: " + phone.toString());
-        }catch (Exception e)
-        {
+            
+            // Imprimir la tabla de teléfonos después de crear uno nuevo
+            historial(); // Llama a historial para imprimir la tabla
+        } catch (Exception e) {
             log.warn(e.getMessage());
             System.out.println("Error al crear el telefono");
         }
     }
+    
 
     public void editarTelefono(TelefonoModelCli telefonoModelCli, String database) {
         log.info("Into editar TelefonoEntity in Input Adapter");
-        try{
+        try {
             setPhoneOutputPortInjection(database);
             //Find person by id
             Person owner = personInputPort.findOne(Integer.parseInt(telefonoModelCli.getIdPerson()));
-            Phone phone = phoneInputPort.edit(telefonoModelCli.getNumber(),telefonoMapperCli.fromAdapterCliToDomain(telefonoModelCli, owner));
+            Phone phone = phoneInputPort.edit(telefonoModelCli.getNumber(), telefonoMapperCli.fromAdapterCliToDomain(telefonoModelCli, owner));
             System.out.println("Telefono editado correctamente: " + phone.toString());
-        }catch (Exception e)
-        {
+        } catch (Exception e) {
             log.warn(e.getMessage());
             System.out.println("Error al editar el telefono");
         }
@@ -101,13 +115,12 @@ public class TelefonoInputAdapterCli {
 
     public void eliminarTelefono(String database, String number) {
         log.info("Into eliminar TelefonoEntity in Input Adapter");
-        try{
+        try {
             setPhoneOutputPortInjection(database);
             boolean resultado = phoneInputPort.drop(number);
             if (resultado)
-                System.out.println("Telefono eliminado correctamente: "+number);
-        }catch (Exception e)
-        {
+                System.out.println("Telefono eliminado correctamente: " + number);
+        } catch (Exception e) {
             log.warn(e.getMessage());
             System.out.println("Error al eliminar el telefono");
         }
@@ -115,13 +128,12 @@ public class TelefonoInputAdapterCli {
 
     public void buscarTelefono(String database, String number) {
         log.info("Into buscar TelefonoEntity in Input Adapter");
-        try{
+        try {
             setPhoneOutputPortInjection(database);
             Phone phone = phoneInputPort.findOne(number);
             TelefonoModelCli telefonoModelCli = telefonoMapperCli.fromDomainToAdapterCli(phone);
-            System.out.println("Telefono encontrado: "+telefonoModelCli.toString());
-        }catch (Exception e)
-        {
+            System.out.println("Telefono encontrado: " + telefonoModelCli.toString());
+        } catch (Exception e) {
             log.warn(e.getMessage());
             System.out.println("Error al buscar el telefono");
         }

@@ -34,13 +34,13 @@ public class PersonaMenu {
                         isValid = true;
                         break;
                     case PERSISTENCIA_MARIADB:
-                        PersonaMenu.DATABASE = "MARIA";
-                        personaInputAdapterCli.setPersonOutputPortInjection(PersonaMenu.DATABASE);
+                        DATABASE = "MARIA";
+                        personaInputAdapterCli.setPersonOutputPortInjection(DATABASE);
                         menuOpciones(personaInputAdapterCli, keyboard);
                         break;
                     case PERSISTENCIA_MONGODB:
-                        PersonaMenu.DATABASE = "MONGO";
-                        personaInputAdapterCli.setPersonOutputPortInjection(PersonaMenu.DATABASE);
+                        DATABASE = "MONGO";
+                        personaInputAdapterCli.setPersonOutputPortInjection(DATABASE);
                         menuOpciones(personaInputAdapterCli, keyboard);
                         break;
                     default:
@@ -63,21 +63,25 @@ public class PersonaMenu {
                         isValid = true;
                         break;
                     case OPCION_VER_TODO:
+                        log.info("Visualizando todas las personas.");
                         personaInputAdapterCli.historial();
                         break;
                     case OPCION_CREAR:
-                        personaInputAdapterCli.crearPersona(leerEntidad(keyboard), PersonaMenu.DATABASE);
+                        log.info("Creando una nueva persona.");
+                        personaInputAdapterCli.crearPersona(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_ACTUALIZAR:
-                        personaInputAdapterCli.editarPersona(leerEntidad(keyboard), PersonaMenu.DATABASE);
+                        log.info("Actualizando una persona existente.");
+                        personaInputAdapterCli.editarPersona(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_BUSCAR:
-                        personaInputAdapterCli.buscarPersona(PersonaMenu.DATABASE, leerIdentificacion(keyboard));
+                        log.info("Buscando una persona.");
+                        personaInputAdapterCli.buscarPersona(DATABASE, leerIdentificacion(keyboard));
                         break;
                     case OPCION_ELIMINAR:
-                        personaInputAdapterCli.eliminarPersona(PersonaMenu.DATABASE, leerIdentificacion(keyboard));
+                        log.info("Eliminando una persona.");
+                        personaInputAdapterCli.eliminarPersona(DATABASE, leerIdentificacion(keyboard));
                         break;
-
                     default:
                         log.warn("La opción elegida no es válida.");
                 }
@@ -89,19 +93,23 @@ public class PersonaMenu {
 
     private void mostrarMenuOpciones() {
         System.out.println("----------------------");
-        System.out.println(OPCION_VER_TODO + " para ver todas las personas");
-        System.out.println(OPCION_CREAR + " para crear una persona");
-        System.out.println(OPCION_ACTUALIZAR + " para actualizar una persona");
-        System.out.println(OPCION_BUSCAR + " para buscar una persona");
-        System.out.println(OPCION_ELIMINAR + " para eliminar una persona");
-        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " para regresar");
+        System.out.println("MENÚ DE PERSONAS");
+        System.out.println(OPCION_VER_TODO + " - Get All Personas");
+        System.out.println(OPCION_CREAR + " - Create Persona");
+        System.out.println(OPCION_ACTUALIZAR + " - Update Persona");
+        System.out.println(OPCION_BUSCAR + " - Find Persona");
+        System.out.println(OPCION_ELIMINAR + " - Delete Persona");
+        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private void mostrarMenuMotorPersistencia() {
         System.out.println("----------------------");
-        System.out.println(PERSISTENCIA_MARIADB + " para MariaDB");
-        System.out.println(PERSISTENCIA_MONGODB + " para MongoDB");
-        System.out.println(OPCION_REGRESAR_MODULOS + " para regresar");
+        System.out.println("SELECCIONAR MOTOR DE PERSISTENCIA");
+        System.out.println(PERSISTENCIA_MARIADB + " - MariaDB");
+        System.out.println(PERSISTENCIA_MONGODB + " - MongoDB");
+        System.out.println(OPCION_REGRESAR_MODULOS + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private int leerOpcion(Scanner keyboard) {
@@ -110,31 +118,33 @@ public class PersonaMenu {
             return keyboard.nextInt();
         } catch (InputMismatchException e) {
             log.warn("Solo se permiten números.");
+            keyboard.nextLine(); // Limpiar el buffer
             return leerOpcion(keyboard);
         }
     }
 
     private int leerIdentificacion(Scanner keyboard) {
         try {
-            System.out.print("Ingrese la identificacion: ");
+            System.out.print("Ingrese la identificación: ");
             return keyboard.nextInt();
         } catch (InputMismatchException e) {
             log.warn("Solo se permiten números.");
-            return leerOpcion(keyboard);
+            keyboard.nextLine(); // Limpiar el buffer
+            return leerIdentificacion(keyboard);
         }
     }
 
     public PersonaModelCli leerEntidad(Scanner keyboard) {
         try {
             PersonaModelCli personaModelCli = new PersonaModelCli();
-            System.out.print("Ingrese la identificacion: ");
+            System.out.print("Ingrese la identificación: ");
             personaModelCli.setCc(keyboard.nextInt());
             keyboard.nextLine();
             System.out.print("Ingrese el nombre: ");
             personaModelCli.setNombre(keyboard.nextLine());
             System.out.print("Ingrese el apellido: ");
             personaModelCli.setApellido(keyboard.nextLine());
-            System.out.println("Ingrese el genero (M/F): ");
+            System.out.println("Ingrese el género (M/F): ");
             personaModelCli.setGenero(keyboard.nextLine());
             System.out.println("Ingrese la edad: ");
             personaModelCli.setEdad(keyboard.nextInt());
@@ -142,9 +152,8 @@ public class PersonaMenu {
             return personaModelCli;
         } catch (InputMismatchException e) {
             System.out.println("Datos incorrectos, ingrese los datos nuevamente.");
+            keyboard.nextLine(); // Limpiar el buffer
             return leerEntidad(keyboard);
         }
     }
-
-
 }

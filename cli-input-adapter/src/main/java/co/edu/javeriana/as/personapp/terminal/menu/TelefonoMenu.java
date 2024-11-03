@@ -34,13 +34,13 @@ public class TelefonoMenu {
                         isValid = true;
                         break;
                     case PERSISTENCIA_MARIADB:
-                        TelefonoMenu.DATABASE = "MARIA";
-                        telefonoInputAdapterCli.setPhoneOutputPortInjection(TelefonoMenu.DATABASE);
+                        DATABASE = "MARIA";
+                        telefonoInputAdapterCli.setPhoneOutputPortInjection(DATABASE);
                         menuOpciones(telefonoInputAdapterCli, keyboard);
                         break;
                     case PERSISTENCIA_MONGODB:
-                        TelefonoMenu.DATABASE = "MONGO";
-                        telefonoInputAdapterCli.setPhoneOutputPortInjection(TelefonoMenu.DATABASE);
+                        DATABASE = "MONGO";
+                        telefonoInputAdapterCli.setPhoneOutputPortInjection(DATABASE);
                         menuOpciones(telefonoInputAdapterCli, keyboard);
                         break;
                     default:
@@ -63,19 +63,24 @@ public class TelefonoMenu {
                         isValid = true;
                         break;
                     case OPCION_VER_TODO:
+                        log.info("Visualizando todos los teléfonos.");
                         telefonoInputAdapterCli.historial();
                         break;
                     case OPCION_CREAR:
-                        telefonoInputAdapterCli.crearTelefono(leerEntidad(keyboard), TelefonoMenu.DATABASE);
+                        log.info("Creando un nuevo teléfono.");
+                        telefonoInputAdapterCli.crearTelefono(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_ACTUALIZAR:
-                        telefonoInputAdapterCli.editarTelefono(leerEntidad(keyboard), TelefonoMenu.DATABASE);
+                        log.info("Actualizando un teléfono existente.");
+                        telefonoInputAdapterCli.editarTelefono(leerEntidad(keyboard), DATABASE);
                         break;
                     case OPCION_BUSCAR:
-                        telefonoInputAdapterCli.buscarTelefono(TelefonoMenu.DATABASE, leerNumero(keyboard));
+                        log.info("Buscando un teléfono.");
+                        telefonoInputAdapterCli.buscarTelefono(DATABASE, leerNumero(keyboard));
                         break;
                     case OPCION_ELIMINAR:
-                        telefonoInputAdapterCli.eliminarTelefono(TelefonoMenu.DATABASE, leerNumero(keyboard));
+                        log.info("Eliminando un teléfono.");
+                        telefonoInputAdapterCli.eliminarTelefono(DATABASE, leerNumero(keyboard));
                         break;
                     default:
                         log.warn("La opción elegida no es válida.");
@@ -88,19 +93,23 @@ public class TelefonoMenu {
 
     private void mostrarMenuOpciones() {
         System.out.println("----------------------");
-        System.out.println(OPCION_VER_TODO + " para ver todos los teléfonos");
-        System.out.println(OPCION_CREAR + " para crear un teléfono");
-        System.out.println(OPCION_ACTUALIZAR + " para actualizar un teléfono");
-        System.out.println(OPCION_BUSCAR + " para buscar un teléfono");
-        System.out.println(OPCION_ELIMINAR + " para eliminar un teléfono");
-        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " para regresar");
+        System.out.println("MENÚ DE TELÉFONOS");
+        System.out.println(OPCION_VER_TODO + " - Ver todos los teléfonos");
+        System.out.println(OPCION_CREAR + " - Crear un teléfono");
+        System.out.println(OPCION_ACTUALIZAR + " - Actualizar un teléfono");
+        System.out.println(OPCION_BUSCAR + " - Buscar un teléfono");
+        System.out.println(OPCION_ELIMINAR + " - Eliminar un teléfono");
+        System.out.println(OPCION_REGRESAR_MOTOR_PERSISTENCIA + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private void mostrarMenuMotorPersistencia() {
         System.out.println("----------------------");
-        System.out.println(PERSISTENCIA_MARIADB + " para MariaDB");
-        System.out.println(PERSISTENCIA_MONGODB + " para MongoDB");
-        System.out.println(OPCION_REGRESAR_MODULOS + " para regresar");
+        System.out.println("SELECCIONAR MOTOR DE PERSISTENCIA");
+        System.out.println(PERSISTENCIA_MARIADB + " - MariaDB");
+        System.out.println(PERSISTENCIA_MONGODB + " - MongoDB");
+        System.out.println(OPCION_REGRESAR_MODULOS + " - Regresar");
+        System.out.println("----------------------");
     }
 
     private int leerOpcion(Scanner keyboard) {
@@ -109,38 +118,51 @@ public class TelefonoMenu {
             return keyboard.nextInt();
         } catch (InputMismatchException e) {
             log.warn("Solo se permiten números.");
+            keyboard.nextLine(); // Limpiar el buffer
             return leerOpcion(keyboard);
         }
     }
 
     private String leerNumero(Scanner keyboard) {
         try {
-            keyboard.nextLine();
-            System.out.print("Ingrese el numero: ");
-            String numero = keyboard.nextLine();
-            return numero;
+            System.out.print("Ingrese el número: ");
+            return keyboard.nextLine();
         } catch (Exception e) {
-            log.warn("Solo se permiten números.");
+            log.warn("Error al ingresar el número.");
             return leerNumero(keyboard);
         }
     }
 
     public TelefonoModelCli leerEntidad(Scanner keyboard) {
-        try {
-            TelefonoModelCli telefonoModelCli = new TelefonoModelCli();
-            keyboard.nextLine();
-            System.out.print("Ingrese el numero: ");
-            telefonoModelCli.setNumber(keyboard.nextLine());
-            System.out.print("Ingrese la compañia: ");
-            telefonoModelCli.setCompany(keyboard.nextLine());
-            System.out.print("Ingrese el id de la persona: ");
-            telefonoModelCli.setIdPerson(keyboard.nextLine());
-            return telefonoModelCli;
-        } catch (Exception e) {
-            System.out.println("Datos incorrectos, ingrese los datos nuevamente.");
-            return leerEntidad(keyboard);
+        TelefonoModelCli telefonoModelCli = new TelefonoModelCli();
+        
+        // Leer número de teléfono
+        System.out.print("Ingrese el número: ");
+        String numero = keyboard.nextLine().trim(); // Leer el número y eliminar espacios
+        if (numero.isEmpty()) {
+            System.out.println("El número no puede estar vacío. Intente de nuevo.");
+            return leerEntidad(keyboard); // Vuelve a pedir la entrada si está vacío
         }
+        telefonoModelCli.setNumber(numero);
+    
+        // Leer compañía
+        System.out.print("Ingrese la compañía: ");
+        String compania = keyboard.nextLine().trim(); // Leer la compañía y eliminar espacios
+        if (compania.isEmpty()) {
+            System.out.println("La compañía no puede estar vacía. Intente de nuevo.");
+            return leerEntidad(keyboard); // Vuelve a pedir la entrada si está vacío
+        }
+        telefonoModelCli.setCompany(compania);
+    
+        // Leer ID de persona
+        System.out.print("Ingrese el ID de la persona: ");
+        String idPersona = keyboard.nextLine().trim();
+        if (idPersona.isEmpty()) {
+            System.out.println("El ID de la persona no puede estar vacío. Intente de nuevo.");
+            return leerEntidad(keyboard); // Vuelve a pedir la entrada si está vacío
+        }
+        telefonoModelCli.setIdPerson(idPersona);
+    
+        return telefonoModelCli;
     }
-
-
 }
