@@ -1,14 +1,11 @@
-# Usar una imagen base de Java 17
-FROM openjdk:17-jdk
+# Usa una imagen base de OpenJDK
+FROM openjdk:17-jdk-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copiar el archivo JAR generado por Maven desde el directorio target
-COPY target/support-0.0.1-SNAPSHOT.jar app.jar
-
-# Exponer el puerto en el que corre la aplicación (3000)
-EXPOSE 3000
+# Copia el archivo JAR de tu aplicación al contenedor
+COPY rest-input-adapter/target/rest-input-adapter-0.0.1-SNAPSHOT.jar app.jar
 
 # Comando para ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
