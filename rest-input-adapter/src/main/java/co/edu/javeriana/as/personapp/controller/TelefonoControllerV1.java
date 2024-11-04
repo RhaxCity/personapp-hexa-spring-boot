@@ -3,9 +3,13 @@ package co.edu.javeriana.as.personapp.controller;
 import co.edu.javeriana.as.personapp.adapter.TelefonoInputAdapterRest;
 import co.edu.javeriana.as.personapp.model.request.TelefonoRequest;
 import co.edu.javeriana.as.personapp.model.response.TelefonoResponse;
+import co.edu.javeriana.as.personapp.common.exceptions.InvalidOptionException;
+import co.edu.javeriana.as.personapp.common.exceptions.NoExistException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,20 +30,33 @@ public class TelefonoControllerV1 {
             @ApiResponse(responseCode = "200", description = "Teléfonos retornados exitosamente"),
             @ApiResponse(responseCode = "404", description = "Teléfonos no encontrados")
     })
-    @ResponseBody
     @GetMapping(path="/{database}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<TelefonoResponse> historial(
+    public ResponseEntity<List<TelefonoResponse>> historial(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "myDatabase")
             @PathVariable String database){
         log.info("Into telefonos REST API");
-        return telefonoInputAdapterRest.historial(database.toUpperCase());
+        try {
+            List<TelefonoResponse> telefonos = telefonoInputAdapterRest.historial(database.toUpperCase());
+            return ResponseEntity.ok(telefonos);
+        } catch (InvalidOptionException e) {
+            log.warn("Invalid database option: " + database + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (NoExistException e) {
+            log.warn("No telephones found in database: " + database + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
-    @ResponseBody
     @PostMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public TelefonoResponse crearTelefono(@RequestBody TelefonoRequest request) {
-        log.info("esta en el metodo crearTelefono en el controller del api");
-        return telefonoInputAdapterRest.createPhone(request);
+    public ResponseEntity<TelefonoResponse> crearTelefono(@RequestBody TelefonoRequest request) {
+        log.info("Esta en el metodo crearTelefono en el controller del api");
+        try {
+            TelefonoResponse telefonoResponse = telefonoInputAdapterRest.createPhone(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(telefonoResponse);
+        } catch (InvalidOptionException | NoExistException e) {
+            log.warn("Error creating phone: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     @Operation(summary = "Buscar teléfono por ID")
@@ -47,15 +64,23 @@ public class TelefonoControllerV1 {
             @ApiResponse(responseCode = "200", description = "Teléfono encontrado exitosamente"),
             @ApiResponse(responseCode = "404", description = "Teléfono no encontrado")
     })
-    @ResponseBody
     @GetMapping(path = "/{database}/{num}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TelefonoResponse findPhoneById(
+    public ResponseEntity<TelefonoResponse> findPhoneById(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "myDatabase")
             @PathVariable String database,
             @Parameter(description = "Número de teléfono", required = true, example = "123456789")
             @PathVariable String num){
         log.info("Into telefonoById REST API");
-        return telefonoInputAdapterRest.findOne(database, num);
+        try {
+            TelefonoResponse telefono = telefonoInputAdapterRest.findOne(database, num);
+            return ResponseEntity.ok(telefono);
+        } catch (InvalidOptionException e) {
+            log.warn("Invalid database option: " + database + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (NoExistException e) {
+            log.warn("Phone not found with number: " + num + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @Operation(summary = "Eliminar teléfono por ID")
@@ -63,15 +88,23 @@ public class TelefonoControllerV1 {
             @ApiResponse(responseCode = "200", description = "Teléfono eliminado exitosamente"),
             @ApiResponse(responseCode = "404", description = "Teléfono no encontrado")
     })
-    @ResponseBody
     @DeleteMapping(path = "/{database}/{num}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TelefonoResponse deletePhone(
+    public ResponseEntity<TelefonoResponse> deletePhone(
             @Parameter(description = "Base de datos donde se quiere buscar", required = true, example = "myDatabase")
             @PathVariable String database,
             @Parameter(description = "Número de teléfono", required = true, example = "123456789")
             @PathVariable String num) {
         log.info("Into deleteTelefonoById REST API");
-        return telefonoInputAdapterRest.deletePhone(database, num);
+        try {
+            TelefonoResponse response = telefonoInputAdapterRest.deletePhone(database, num);
+            return ResponseEntity.ok(response);
+        } catch (InvalidOptionException e) {
+            log.warn("Invalid database option: " + database + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (NoExistException e) {
+            log.warn("Phone not found with number: " + num + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @Operation(summary = "Actualizar teléfono")
@@ -79,12 +112,20 @@ public class TelefonoControllerV1 {
             @ApiResponse(responseCode = "200", description = "Teléfono actualizado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida")
     })
-    @ResponseBody
     @PutMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public TelefonoResponse updatePhone(
+    public ResponseEntity<TelefonoResponse> updatePhone(
             @Parameter(description = "Solicitud de actualización de teléfono", required = true)
             @RequestBody TelefonoRequest request) {
         log.info("Into updateTelefonoById REST API");
-        return telefonoInputAdapterRest.editPhone(request);
+        try {
+            TelefonoResponse response = telefonoInputAdapterRest.editPhone(request);
+            return ResponseEntity.ok(response);
+        } catch (InvalidOptionException e) {
+            log.warn("Invalid database option: " + request.getDatabase() + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (NoExistException e) {
+            log.warn("Phone not found with number: " + request.getNumber() + " " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 }

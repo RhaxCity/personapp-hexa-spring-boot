@@ -32,7 +32,7 @@ public class ProfesionInputAdapterRest {
     @Autowired
     private ProfesionMapperRest profesionMapperRest;
 
-    ProfessionInputPort professionInputPort;
+    private ProfessionInputPort professionInputPort;
 
     private String setProfessionOutputPortInjection(String dbOption) throws InvalidOptionException {
         if (dbOption.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
@@ -40,76 +40,85 @@ public class ProfesionInputAdapterRest {
             return DatabaseOption.MARIA.toString();
         } else if (dbOption.equalsIgnoreCase(DatabaseOption.MONGO.toString())) {
             professionInputPort = new ProfessionUseCase(professionOutputPortMongo);
-            return  DatabaseOption.MONGO.toString();
+            return DatabaseOption.MONGO.toString();
         } else {
             throw new InvalidOptionException("Invalid database option: " + dbOption);
         }
     }
 
-    public List<ProfesionResponse> historial(String database)
-    {
-        log.info("Into historial ProfesionEntity in Input Adapter");
+    public List<ProfesionResponse> historial(String database) {
+        log.info("Consultando historial en ProfesionInputAdapterRest");
         try {
             String db = setProfessionOutputPortInjection(database);
-            if(db.equalsIgnoreCase(DatabaseOption.MARIA.toString())){
-                return professionInputPort.findAll().stream().map(profesionMapperRest::fromDomainToAdapterRestMaria)
-                        .collect(Collectors.toList());
-            }
-            else {
-                return professionInputPort.findAll().stream().map(profesionMapperRest::fromDomainToAdapterRestMongo)
-                        .collect(Collectors.toList());
-            }
+            return professionInputPort.findAll().stream()
+                    .map(profesionMapperRest::fromDomainToAdapterRestMaria)
+                    .collect(Collectors.toList());
         } catch (InvalidOptionException e) {
-            log.warn(e.getMessage());
-            return new ArrayList<ProfesionResponse>();
+            log.error("Ocurrió un error: {}", e.getMessage());
+            throw new RuntimeException("Opción de base de datos no válida: " + database);
+        } catch (Exception e) {
+            log.error("Error al obtener historial: {}", e.getMessage());
+            throw new RuntimeException("Error al obtener historial de profesiones.");
         }
-
     }
 
-    public ProfesionResponse createProfession(ProfesionRequest request)
-    {
-        try{
+    public ProfesionResponse createProfession(ProfesionRequest request) {
+        try {
             setProfessionOutputPortInjection(request.getDatabase());
-            return profesionMapperRest.fromDomainToAdapterRestMaria(professionInputPort.create(profesionMapperRest.fromAdapterToDomain(request)));
-        }catch (InvalidOptionException e) {
-            log.warn(e.getMessage());
-            //return new ProfesionResponse("","","",e.getMessage(),"");
-            return null;
+            Profession profession = profesionMapperRest.fromAdapterToDomain(request);
+            return profesionMapperRest.fromDomainToAdapterRestMaria(professionInputPort.create(profession));
+        } catch (InvalidOptionException e) {
+            log.error("Ocurrió un error: {}", e.getMessage());
+            throw new RuntimeException("Opción de base de datos no válida: " + request.getDatabase());
+        } catch (Exception e) {
+            log.error("Error al crear profesión: {}", e.getMessage());
+            throw new RuntimeException("Error al crear la profesión.");
         }
     }
-    public ProfesionResponse findOneProfession(String database, String id)
-    {
-        try{
+
+    public ProfesionResponse findOneProfession(String database, String id) {
+        try {
             setProfessionOutputPortInjection(database);
             return profesionMapperRest.fromDomainToAdapterRestMaria(professionInputPort.findOne(Integer.parseInt(id)));
-        }catch (Exception e) {
-            log.warn(e.getMessage());
-            //return new ProfesionResponse("","","",e.getMessage(),"");
-            return null;
+        } catch (InvalidOptionException e) {
+            log.error("Ocurrió un error: {}", e.getMessage());
+            throw new RuntimeException("Opción de base de datos no válida: " + database);
+        } catch (NumberFormatException e) {
+            log.error("ID no válido: {}", id);
+            throw new RuntimeException("ID de profesión no válido: " + id);
+        } catch (Exception e) {
+            log.error("Error al buscar profesión: {}", e.getMessage());
+            throw new RuntimeException("Error al buscar la profesión con ID: " + id);
         }
     }
 
-    public ProfesionResponse eliminarProfesion(String database, String id)
-    {
-        try{
+    public ProfesionResponse eliminarProfesion(String database, String id) {
+        try {
             setProfessionOutputPortInjection(database);
-            return new ProfesionResponse(0,"DELETED","DELETED",String.valueOf(professionInputPort.drop(Integer.parseInt(id))),"DELETED");
-        }catch (Exception e) {
-            log.warn(e.getMessage());
-            //return new ProfesionResponse("","","",e.getMessage(),"");
-            return null;
-        }
-    }
-    public ProfesionResponse editarProfesion(ProfesionRequest request)
-    {
-        try{
-            setProfessionOutputPortInjection(request.getDatabase());
-            return profesionMapperRest.fromDomainToAdapterRestMaria(professionInputPort.edit(request.getId(),profesionMapperRest.fromAdapterToDomain(request)));
-        }catch (Exception e) {
-            log.warn(e.getMessage());
-            //return new ProfesionResponse("","","",e.getMessage(),"");
-            return null;
+            boolean isDeleted = professionInputPort.drop(Integer.parseInt(id));
+            return new ProfesionResponse(isDeleted ? Integer.parseInt(id) : 0, "DELETED", "DELETED", "Profesión eliminada", "DELETED");
+        } catch (InvalidOptionException e) {
+            log.error("Ocurrió un error: {}", e.getMessage());
+            throw new RuntimeException("Opción de base de datos no válida: " + database);
+        } catch (NumberFormatException e) {
+            log.error("ID no válido: {}", id);
+            throw new RuntimeException("ID de profesión no válido: " + id);
+        } catch (Exception e) {
+            log.error("Error al eliminar profesión: {}", e.getMessage());
+            throw new RuntimeException("Error al eliminar la profesión con ID: " + id);
         }
     }
 
+    public ProfesionResponse editarProfesion(ProfesionRequest request) {
+        try {
+            setProfessionOutputPortInjection(request.getDatabase());
+            return profesionMapperRest.fromDomainToAdapterRestMaria(professionInputPort.edit(request.getId(), profesionMapperRest.fromAdapterToDomain(request)));
+        } catch (InvalidOptionException e) {
+            log.error("Ocurrió un error: {}", e.getMessage());
+            throw new RuntimeException("Opción de base de datos no válida: " + request.getDatabase());
+        } catch (Exception e) {
+            log.error("Error al editar profesión: {}", e.getMessage());
+            throw new RuntimeException("Error al editar la profesión.");
+        }
+    }
 }

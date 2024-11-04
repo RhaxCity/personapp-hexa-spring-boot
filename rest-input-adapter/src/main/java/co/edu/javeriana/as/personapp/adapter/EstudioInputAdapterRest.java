@@ -17,12 +17,9 @@ import co.edu.javeriana.as.personapp.domain.Profession;
 import co.edu.javeriana.as.personapp.domain.Study;
 import co.edu.javeriana.as.personapp.mapper.EstudioMapperRest;
 import co.edu.javeriana.as.personapp.model.request.EstudioRequest;
-import co.edu.javeriana.as.personapp.model.request.PersonaRequest;
 import co.edu.javeriana.as.personapp.model.response.EstudioResponse;
-import co.edu.javeriana.as.personapp.model.response.PersonaResponse;
 import lombok.extern.slf4j.Slf4j;
 
-import org.checkerframework.checker.units.qual.s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -62,9 +59,9 @@ public class EstudioInputAdapterRest {
     @Autowired
     private EstudioMapperRest estudioMapperRest;
 
-    PersonInputPort personInputPort;
-    StudyInputPort studyInputPort;
-    ProfessionInputPort professionInputPort;
+    private PersonInputPort personInputPort;
+    private StudyInputPort studyInputPort;
+    private ProfessionInputPort professionInputPort;
 
     public String setStudyOutputPortInjection(String dbOption) throws InvalidOptionException {
         if (dbOption.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
@@ -82,85 +79,82 @@ public class EstudioInputAdapterRest {
         }
     }
 
-    public List<EstudioResponse> historial(String database){
+    public List<EstudioResponse> historial(String database) {
         log.info("Into historial PersonaEntity in Input Adapter");
         try {
-            if(setStudyOutputPortInjection(database).equalsIgnoreCase(DatabaseOption.MARIA.toString())){
-                return studyInputPort.findAll().stream().map(estudioMapperRest::fromDomainToAdapterRestMaria)
+            setStudyOutputPortInjection(database);
+            if (database.equalsIgnoreCase(DatabaseOption.MARIA.toString())) {
+                return studyInputPort.findAll().stream()
+                        .map(estudioMapperRest::fromDomainToAdapterRestMaria)
                         .collect(Collectors.toList());
-            }else {
-                return studyInputPort.findAll().stream().map(estudioMapperRest::fromDomainToAdapterRestMongo)
+            } else {
+                return studyInputPort.findAll().stream()
+                        .map(estudioMapperRest::fromDomainToAdapterRestMongo)
                         .collect(Collectors.toList());
             }
-
         } catch (InvalidOptionException e) {
             log.warn(e.getMessage());
-            return new ArrayList<EstudioResponse>();
+            return new ArrayList<>();
         }
     }
 
-
-    public EstudioResponse createStudy(EstudioRequest estudioRequest){
+    public EstudioResponse createStudy(EstudioRequest estudioRequest) {
         log.info("Into crearEstudio StudyEntity in Input Adapter");
         try {
             setStudyOutputPortInjection(estudioRequest.getDatabase());
             Person person = personInputPort.findOne(Integer.parseInt(estudioRequest.getId_cc()));
-            log.info("Into crearEstudio persona"+ person);
+            log.info("Into crearEstudio persona: " + person);
             Profession profession = professionInputPort.findOne(Integer.parseInt(estudioRequest.getId_pro()));
-            log.info("Into crearEstudio profession"+ profession);
+            log.info("Into crearEstudio profession: " + profession);
             Study study = studyInputPort.create(estudioMapperRest.fromAdapterToDomain(estudioRequest, profession, person));
-            log.info("Into crearEstudio StudyEntity"+ study);
+            log.info("Into crearEstudio StudyEntity: " + study);
             return estudioMapperRest.fromDomainToAdapterRestMaria(study);
         } catch (Exception e) {
-            log.warn(e.getMessage());
-            System.out.println("Error.");
-            return null;
+            log.warn("Error creating study: " + e.getMessage());
+            throw new RuntimeException("Error creating study", e);
         }
     }
 
-    public EstudioResponse findOne(String database, String id_person, String id_profession)
-	{
-		try{
-			setStudyOutputPortInjection(database);
-            log.info("Into findOne StudyEntity in Input Adapter "+ id_person + " " + id_profession);
-			Study study = studyInputPort.findOne(Integer.parseInt(id_profession),Integer.parseInt(id_person));
-            log.info("Into findOne StudyEntity study "+ study);
-			return estudioMapperRest.fromDomainToAdapterRestMaria(study);
-		}
-		catch(Exception e){
-			log.warn(e.getMessage());
-			//return new PersonaResponse("", "", "", "", "", "", "");
-		}
-		return null;
-	}
+    public EstudioResponse findOne(String database, String id_person, String id_profession) {
+        try {
+            setStudyOutputPortInjection(database);
+            log.info("Into findOne StudyEntity in Input Adapter: " + id_person + " " + id_profession);
+            Study study = studyInputPort.findOne(Integer.parseInt(id_profession), Integer.parseInt(id_person));
+            log.info("Found StudyEntity: " + study);
+            return estudioMapperRest.fromDomainToAdapterRestMaria(study);
+        } catch (Exception e) {
+            log.warn("Error finding study: " + e.getMessage());
+            throw new RuntimeException("Error finding study", e);
+        }
+    }
 
-	public EstudioResponse deleteStudio(String database,  String id_person, String id_profession){
-		try{
-			setStudyOutputPortInjection(database);
-            return new EstudioResponse(studyInputPort.drop(Integer.parseInt(id_profession),Integer.parseInt(id_person)).toString(), "DELETED", LocalDate.now(), "DELETED", database,"DELETED");
-		} catch (Exception e){
-			log.warn(e.getMessage());
-			//return new PersonaResponse("", "", "", "", "", "", "");
-		}
-		return null;
-	}
+    public EstudioResponse deleteStudio(String database, String id_person, String id_profession) {
+        try {
+            setStudyOutputPortInjection(database);
+            studyInputPort.drop(Integer.parseInt(id_profession), Integer.parseInt(id_person));
+            return new EstudioResponse("DELETED", "DELETED", LocalDate.now(), "DELETED", database, "DELETED");
+        } catch (Exception e) {
+            log.warn("Error deleting study: " + e.getMessage());
+            throw new RuntimeException("Error deleting study", e);
+        }
+    }
 
-	public EstudioResponse editStudio(EstudioRequest estudioRequest){
-		try{
-			setStudyOutputPortInjection(estudioRequest.getDatabase());
-            log.info("Into updateEstudio StudyEntity in Input Adapter"+ estudioRequest);
-            
+    public EstudioResponse editStudio(EstudioRequest estudioRequest) {
+        try {
+            setStudyOutputPortInjection(estudioRequest.getDatabase());
+            log.info("Into updateEstudio StudyEntity in Input Adapter: " + estudioRequest);
             Person person = personInputPort.findOne(Integer.parseInt(estudioRequest.getId_cc()));
-            log.info("Into updateEstudio persona"+ person);
-
+            log.info("Into updateEstudio persona: " + person);
             Profession profession = professionInputPort.findOne(Integer.parseInt(estudioRequest.getId_pro()));
-            log.info("Into updateEstudio profession"+ profession);
-
-            return estudioMapperRest.fromDomainToAdapterRestMaria(studyInputPort.edit(Integer.parseInt(estudioRequest.getId_pro()),Integer.parseInt(estudioRequest.getId_cc()), estudioMapperRest.fromAdapterToDomain(estudioRequest, profession, person)));
-		}catch (Exception e){
-			log.warn(e.getMessage());
-			//return new PersonaResponse("", "", "", "", "", "", "");
-		}
-		return null;
-	}
+            log.info("Into updateEstudio profession: " + profession);
+            Study updatedStudy = studyInputPort.edit(
+                    Integer.parseInt(estudioRequest.getId_pro()),
+                    Integer.parseInt(estudioRequest.getId_cc()),
+                    estudioMapperRest.fromAdapterToDomain(estudioRequest, profession, person));
+            return estudioMapperRest.fromDomainToAdapterRestMaria(updatedStudy);
+        } catch (Exception e) {
+            log.warn("Error updating study: " + e.getMessage());
+            throw new RuntimeException("Error updating study", e);
+        }
+    }
 }
